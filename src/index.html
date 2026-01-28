@@ -72,6 +72,23 @@
       text-transform: uppercase;
       letter-spacing: 1px;
     }
+    .bubble {
+      margin-top: 10px;
+      background: white;
+      padding: 8px 14px;
+      border-radius: 12px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+      font-size: 12px;
+      color: #333;
+      transition: opacity 0.2s, transform 0.2s;
+      max-width: 160px;
+      text-align: center;
+    }
+    .bubble.hidden {
+      opacity: 0;
+      transform: translateY(5px);
+      pointer-events: none;
+    }
   </style>
 </head>
 <body>

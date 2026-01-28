@@ -22,11 +22,14 @@ app.innerHTML = `
     </div>
     <div class="state-label">idle</div>
   </div>
+  <div id="bubble" class="bubble hidden">
+    <span class="bubble-text"></span>
+  </div>
 `;
 
-// Re-select elements after innerHTML is set
-const workspaceIndicator = document.querySelector(".workspace-indicator")!;
-const projectName = document.querySelector(".project-name")!;
+// Re-select elements WITHIN app to avoid duplicates
+const workspaceIndicator = app.querySelector(".workspace-indicator")!;
+const projectName = app.querySelector(".project-name")!;
 
 async function updateProjects() {
   try {
@@ -72,8 +75,8 @@ projectName.addEventListener("click", () => {
 // Initial project load
 updateProjects();
 
-// Bubble elements
-const bubble = document.getElementById("bubble")!;
+// Bubble elements (scoped to app)
+const bubble = app.querySelector("#bubble")!;
 const bubbleText = bubble.querySelector(".bubble-text")!;
 let bubbleTimeout: number | null = null;
 
@@ -122,10 +125,10 @@ listen<string>("claudy-state-change", async (event) => {
 });
 
 function updatePlaceholder(state: ClaudyState) {
-  const label = document.querySelector(".state-label");
-  const mouth = document.querySelector(".mouth");
-  const eyes = document.querySelector(".eyes");
-  const placeholder = document.querySelector(".claudy-placeholder");
+  const label = app.querySelector(".state-label");
+  const mouth = app.querySelector(".mouth");
+  const eyes = app.querySelector(".eyes");
+  const placeholder = app.querySelector(".claudy-placeholder");
 
   if (label) label.textContent = state;
 
