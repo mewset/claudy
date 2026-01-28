@@ -67,6 +67,7 @@ impl SessionWatcher {
 fn path_to_slug(path: &Path) -> String {
     path.to_string_lossy()
         .replace("/", "-")
+        .replace(".", "")
         .to_string()
 }
 
