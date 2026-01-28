@@ -15,7 +15,14 @@
         "title": "Claudy",
         "width": 200,
         "height": 250,
+        "x": 100,
+        "y": 100,
+        "decorations": false,
+        "transparent": true,
+        "alwaysOnTop": true,
+        "skipTaskbar": true,
         "resizable": false,
+        "visible": false,
         "fullscreen": false
       }
     ],
