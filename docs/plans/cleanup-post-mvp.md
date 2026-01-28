@@ -72,4 +72,36 @@ default-run = "claudy"
 
 ---
 
+---
+
+## Future Ideas
+
+### Multi-Screen / Kiosk Mode
+
+**Concept:** Claudy on your phone as a desk companion while coding!
+
+**Why:**
+- Many devs have their phone on the desk charging
+- Dedicated Claudy display without taking screen real estate
+- Could run on tablet, old phone, or secondary monitor
+
+**Implementation:**
+1. Add WebSocket server to Rust backend
+2. Frontend detects environment (Tauri vs browser)
+3. Browser mode connects via WS instead of Tauri API
+4. Same events, same animations, any device
+
+**Vite setup:**
+```bash
+npm run dev -- --host
+# Access from any device: http://<ip>:5173
+```
+
+**Nice to have:**
+- Touch interactions (pet Claudy!)
+- Portrait/landscape layouts
+- "Always on display" mode for OLED phones
+
+---
+
 *Created 2026-01-28*
