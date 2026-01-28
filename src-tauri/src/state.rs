@@ -33,24 +33,44 @@ impl ClaudyState {
                 }
                 self.current_state = "wake".to_string();
             }
-            ClaudeEvent::UserMessage { .. } => {
+            ClaudeEvent::UserMessage { project } => {
+                if !self.active_projects.contains(project) {
+                    self.active_projects.push(project.clone());
+                }
+                if self.focused_project.is_none() {
+                    self.focused_project = Some(project.clone());
+                }
                 self.current_state = "listening".to_string();
             }
-            ClaudeEvent::AssistantWorking { .. } => {
+            ClaudeEvent::AssistantWorking { project } => {
+                if !self.active_projects.contains(project) {
+                    self.active_projects.push(project.clone());
+                }
+                if self.focused_project.is_none() {
+                    self.focused_project = Some(project.clone());
+                }
                 self.current_state = "thinking".to_string();
             }
-            ClaudeEvent::ToolUse { .. } => {
+            ClaudeEvent::ToolUse { project, .. } => {
+                if !self.active_projects.contains(project) {
+                    self.active_projects.push(project.clone());
+                }
+                if self.focused_project.is_none() {
+                    self.focused_project = Some(project.clone());
+                }
                 self.current_state = "working".to_string();
             }
             ClaudeEvent::Stop { project, success } => {
+                // Make sure project is in active list (in case we missed earlier events)
+                if !self.active_projects.contains(project) {
+                    self.active_projects.push(project.clone());
+                }
+                if self.focused_project.is_none() {
+                    self.focused_project = Some(project.clone());
+                }
                 self.current_state = if *success { "happy" } else { "confused" }.to_string();
-                // Remove from active projects after handling
-                if let Some(pos) = self.active_projects.iter().position(|p| p == project) {
-                    self.active_projects.remove(pos);
-                }
-                if self.focused_project.as_ref() == Some(project) {
-                    self.focused_project = self.active_projects.first().cloned();
-                }
+                // Note: Don't remove project on Stop - keep it visible
+                // User can see which project completed the task
             }
             ClaudeEvent::Error { .. } => {
                 self.current_state = "confused".to_string();
