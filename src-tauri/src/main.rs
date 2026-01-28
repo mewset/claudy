@@ -6,7 +6,13 @@ use tauri::{
     Manager,
 };
 
+mod config;
+
 fn main() {
+    // Test config loading
+    let cfg = config::load_config();
+    println!("Config loaded: {:?}", cfg);
+
     tauri::Builder::default()
         .setup(|app| {
             let quit = MenuItem::with_id(app, "quit", "Quit", true, None::<&str>)?;
