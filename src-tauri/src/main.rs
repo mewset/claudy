@@ -42,6 +42,7 @@ fn send_notification(app: tauri::AppHandle, title: &str, body: &str) -> Result<(
 
 fn main() {
     let cfg = config::load_config();
+    #[cfg(debug_assertions)]
     println!("Config loaded: {:?}", cfg);
 
     let shared_state: SharedState = Arc::new(Mutex::new(ClaudyState::new()));
@@ -89,6 +90,7 @@ fn main() {
 
             std::thread::spawn(move || {
                 let watcher_result = SessionWatcher::new(move |event| {
+                    #[cfg(debug_assertions)]
                     println!("Claude event: {:?}", event);
 
                     let mut s = state_clone.lock().unwrap();

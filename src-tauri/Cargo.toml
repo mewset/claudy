@@ -4,6 +4,7 @@ version = "0.1.0"
 description = "Claudy - Your Claude Code companion"
 authors = [""]
 edition = "2021"
+default-run = "claudy"
 
 [lib]
 name = "claudy_lib"
@@ -32,3 +33,9 @@ path = "src/bin/claudy-cli.rs"
 default = ["custom-protocol", "tray-icon"]
 custom-protocol = ["tauri/custom-protocol"]
 tray-icon = []
+
+[profile.release]
+strip = true
+lto = true
+opt-level = "z"
+codegen-units = 1
