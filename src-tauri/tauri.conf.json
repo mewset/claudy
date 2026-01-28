@@ -19,6 +19,10 @@
         "fullscreen": false
       }
     ],
+    "trayIcon": {
+      "iconPath": "icons/tray-icon.png",
+      "iconAsTemplate": false
+    },
     "security": {
       "csp": null
     }
