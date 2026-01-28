@@ -2,3 +2,4 @@
 
 pub mod config;
 pub mod watcher;
+pub mod state;
