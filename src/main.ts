@@ -1,7 +1,56 @@
 import { listen } from "@tauri-apps/api/event";
+import { invoke } from "@tauri-apps/api/core";
 import type { ClaudyState } from "./claudy";
 
 console.log("Claudy starting...");
+
+// Project switcher elements
+const workspaceIndicator = document.querySelector(".workspace-indicator")!;
+const projectName = document.querySelector(".project-name")!;
+
+let activeProjects: string[] = [];
+let focusedIndex = 0;
+
+async function updateProjects() {
+  try {
+    activeProjects = await invoke<string[]>("get_active_projects");
+    renderProjectSwitcher();
+  } catch (e) {
+    console.error("Failed to get projects:", e);
+  }
+}
+
+function renderProjectSwitcher() {
+  if (activeProjects.length === 0) {
+    workspaceIndicator.textContent = "";
+    projectName.textContent = "No project";
+    return;
+  }
+
+  if (activeProjects.length > 1) {
+    const indicators = activeProjects.map((_, i) =>
+      i === focusedIndex ? `[${i + 1}]` : `${i + 1}`
+    ).join(" ");
+    workspaceIndicator.textContent = indicators;
+  } else {
+    workspaceIndicator.textContent = "";
+  }
+
+  const current = activeProjects[focusedIndex];
+  // Show just the last part of the path (project folder name)
+  projectName.textContent = current.split("/").pop() || current;
+}
+
+// Click to cycle through projects
+projectName.addEventListener("click", () => {
+  if (activeProjects.length > 1) {
+    focusedIndex = (focusedIndex + 1) % activeProjects.length;
+    renderProjectSwitcher();
+  }
+});
+
+// Initial project load
+updateProjects();
 
 const app = document.getElementById("app")!;
 
@@ -45,10 +94,13 @@ const stateMessages: Partial<Record<ClaudyState, string>> = {
 };
 
 // Listen for state changes from backend
-listen<string>("claudy-state-change", (event) => {
+listen<string>("claudy-state-change", async (event) => {
   const state = event.payload as ClaudyState;
   console.log("State changed:", state);
   updatePlaceholder(state);
+
+  // Update projects list
+  await updateProjects();
 
   // Show bubble for certain states
   const message = stateMessages[state];
