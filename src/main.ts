@@ -4,12 +4,29 @@ import type { ClaudyState } from "./claudy";
 
 console.log("Claudy starting...");
 
-// Project switcher elements
-const workspaceIndicator = document.querySelector(".workspace-indicator")!;
-const projectName = document.querySelector(".project-name")!;
-
 let activeProjects: string[] = [];
 let focusedIndex = 0;
+
+const app = document.getElementById("app")!;
+
+// Create placeholder UI (will be replaced by Rive animation later)
+app.innerHTML = `
+  <div class="project-switcher">
+    <div class="workspace-indicator"></div>
+    <div class="project-name">No project</div>
+  </div>
+  <div class="claudy-placeholder">
+    <div class="face">
+      <div class="eyes">◕ ◕</div>
+      <div class="mouth">‿</div>
+    </div>
+    <div class="state-label">idle</div>
+  </div>
+`;
+
+// Re-select elements after innerHTML is set
+const workspaceIndicator = document.querySelector(".workspace-indicator")!;
+const projectName = document.querySelector(".project-name")!;
 
 async function updateProjects() {
   try {
@@ -37,8 +54,9 @@ function renderProjectSwitcher() {
   }
 
   const current = activeProjects[focusedIndex];
-  // Show just the last part of the path (project folder name)
-  projectName.textContent = current.split("/").pop() || current;
+  // Extract clean project name from path slug
+  const cleanName = current.replace(/^-/, "").split("-").pop() || current;
+  projectName.textContent = cleanName;
 }
 
 // Click to cycle through projects
@@ -51,19 +69,6 @@ projectName.addEventListener("click", () => {
 
 // Initial project load
 updateProjects();
-
-const app = document.getElementById("app")!;
-
-// Create placeholder UI (will be replaced by Rive animation later)
-app.innerHTML = `
-  <div class="claudy-placeholder">
-    <div class="face">
-      <div class="eyes">◕ ◕</div>
-      <div class="mouth">‿</div>
-    </div>
-    <div class="state-label">idle</div>
-  </div>
-`;
 
 // Bubble elements
 const bubble = document.getElementById("bubble")!;
