@@ -28,6 +28,18 @@ fn get_active_projects(state: State<SharedState>) -> Vec<String> {
     s.active_projects.clone()
 }
 
+#[tauri::command]
+fn send_notification(app: tauri::AppHandle, title: &str, body: &str) -> Result<(), String> {
+    use tauri_plugin_notification::NotificationExt;
+
+    app.notification()
+        .builder()
+        .title(title)
+        .body(body)
+        .show()
+        .map_err(|e| e.to_string())
+}
+
 fn main() {
     let cfg = config::load_config();
     println!("Config loaded: {:?}", cfg);
@@ -36,8 +48,9 @@ fn main() {
     let state_for_watcher = shared_state.clone();
 
     tauri::Builder::default()
+        .plugin(tauri_plugin_notification::init())
         .manage(shared_state)
-        .invoke_handler(tauri::generate_handler![get_state, get_active_projects])
+        .invoke_handler(tauri::generate_handler![get_state, get_active_projects, send_notification])
         .setup(move |app| {
             // Setup tray
             let quit = MenuItem::with_id(app, "quit", "Quit", true, None::<&str>)?;
