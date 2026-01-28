@@ -10,9 +10,11 @@ use std::sync::{Arc, Mutex};
 mod config;
 mod watcher;
 mod state;
+mod window;
 
 use state::{ClaudyState, SharedState};
 use watcher::SessionWatcher;
+use window::position_window;
 
 #[tauri::command]
 fn get_state(state: State<SharedState>) -> String {
@@ -60,6 +62,12 @@ fn main() {
                     _ => {}
                 })
                 .build(app)?;
+
+            // Position window based on config
+            if let Some(window) = app.get_webview_window("main") {
+                let cfg = config::load_config();
+                position_window(&window, &cfg);
+            }
 
             // Start watcher for registered projects
             let cfg = config::load_config();
