@@ -66,7 +66,7 @@ export class ClaudyAnimation {
 
     // For one-shot animations, return to idle after
     if (!loop) {
-      newAnimation.addEventListener("complete", () => {
+      this.currentAnimation.addEventListener("complete", () => {
         this.loadAnimation("idle", true);
       });
     }
