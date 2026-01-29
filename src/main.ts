@@ -1,34 +1,34 @@
 import { listen } from "@tauri-apps/api/event";
 import { invoke } from "@tauri-apps/api/core";
-import type { ClaudyState } from "./claudy";
-
+import { ClaudyAnimation, ClaudyState } from "./claudy";
 
 let activeProjects: string[] = [];
 let focusedIndex = 0;
 
 const app = document.getElementById("app")!;
 
-// Create placeholder UI (will be replaced by Rive animation later)
+// Create UI with Lottie container
 app.innerHTML = `
   <div class="project-switcher">
     <div class="workspace-indicator"></div>
     <div class="project-name">No project</div>
   </div>
-  <div class="claudy-placeholder">
-    <div class="face">
-      <div class="eyes">◕ ◕</div>
-      <div class="mouth">‿</div>
-    </div>
-    <div class="state-label">idle</div>
-  </div>
+  <div id="claudy-animation"></div>
+  <div class="state-label">intro</div>
   <div id="bubble" class="bubble hidden">
     <span class="bubble-text"></span>
   </div>
 `;
 
+// Initialize Lottie animation
+const animationContainer = app.querySelector("#claudy-animation") as HTMLElement;
+const claudy = new ClaudyAnimation("/animations");
+claudy.init(animationContainer, true); // true = play intro first
+
 // Re-select elements WITHIN app to avoid duplicates
 const workspaceIndicator = app.querySelector(".workspace-indicator")!;
 const projectName = app.querySelector(".project-name")!;
+const stateLabel = app.querySelector(".state-label")!;
 
 async function updateProjects() {
   try {
@@ -103,7 +103,12 @@ const stateMessages: Partial<Record<ClaudyState, string>> = {
 // Listen for state changes from backend
 listen<string>("claudy-state-change", async (event) => {
   const state = event.payload as ClaudyState;
-  updatePlaceholder(state);
+
+  // Update Lottie animation
+  claudy.setState(state);
+
+  // Update state label
+  stateLabel.textContent = state;
 
   // Update projects list
   await updateProjects();
@@ -114,40 +119,3 @@ listen<string>("claudy-state-change", async (event) => {
     showBubble(message);
   }
 });
-
-function updatePlaceholder(state: ClaudyState) {
-  const label = app.querySelector(".state-label");
-  const mouth = app.querySelector(".mouth");
-  const eyes = app.querySelector(".eyes");
-  const placeholder = app.querySelector(".claudy-placeholder");
-
-  if (label) label.textContent = state;
-
-  // Update facial expression based on state
-  if (mouth && eyes) {
-    const expressions: Record<ClaudyState, { eyes: string; mouth: string }> = {
-      idle: { eyes: "◕ ◕", mouth: "‿" },
-      wake: { eyes: "◉ ◉", mouth: "○" },
-      listening: { eyes: "◕ ◕", mouth: "•" },
-      thinking: { eyes: "◔ ◔", mouth: "～" },
-      working: { eyes: "◕ ◕", mouth: "⌐" },
-      happy: { eyes: "◠ ◠", mouth: "◡" },
-      confused: { eyes: "◑ ◐", mouth: "?" },
-      sleepy: { eyes: "－ －", mouth: "～" },
-    };
-
-    const expr = expressions[state] || expressions.idle;
-    eyes.textContent = expr.eyes;
-    mouth.textContent = expr.mouth;
-  }
-
-  // Add animation class for state transitions
-  if (placeholder) {
-    placeholder.classList.remove("animate");
-    void (placeholder as HTMLElement).offsetWidth; // Trigger reflow
-    placeholder.classList.add("animate");
-  }
-}
-
-// Initial state
-updatePlaceholder("idle");
