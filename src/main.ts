@@ -4,12 +4,20 @@ import "./claudy.css";
 // Detect if running in Tauri or browser
 const isTauri = '__TAURI__' in window;
 
+// Debug mode: show state label with ?debug in URL
+const isDebug = new URLSearchParams(window.location.search).has('debug');
+
 let activeProjects: string[] = [];
 let focusedIndex = 0;
 
 const app = document.getElementById("app")!;
 
-// Create UI with Lottie container
+// Enable debug mode if ?debug in URL
+if (isDebug) {
+  app.classList.add('debug');
+}
+
+// Create UI
 app.innerHTML = `
   <div class="project-switcher">
     <div class="workspace-indicator"></div>
@@ -26,6 +34,41 @@ app.innerHTML = `
 const animationContainer = app.querySelector("#claudy-animation") as HTMLElement;
 const claudy = new ClaudyAnimation("/claudy-parts");
 claudy.init(animationContainer, true); // true = play intro first
+
+// Matrix overlay for "working" state
+function generateBinaryString(length: number): string {
+  return Array.from({ length }, () => Math.random() > 0.5 ? '1' : '0').join('');
+}
+
+function createMatrixOverlay(): HTMLElement {
+  const overlay = document.createElement('div');
+  overlay.className = 'matrix-overlay';
+
+  const NUM_ROWS = 12;
+  const CHARS_PER_ROW = 40;
+
+  for (let i = 0; i < NUM_ROWS; i++) {
+    const row = document.createElement('div');
+    row.className = 'matrix-row';
+    // Double the string for seamless scroll loop
+    const binary = generateBinaryString(CHARS_PER_ROW);
+    row.textContent = binary + binary;
+    overlay.appendChild(row);
+  }
+
+  return overlay;
+}
+
+// Find the wrapper created by ClaudyAnimation and append matrix to it
+const claudyWrapper = animationContainer.querySelector('.claudy-wrapper');
+const matrixOverlay = createMatrixOverlay();
+if (claudyWrapper) {
+  claudyWrapper.appendChild(matrixOverlay);
+}
+
+function setMatrixActive(active: boolean) {
+  matrixOverlay.classList.toggle('active', active);
+}
 
 // Re-select elements WITHIN app to avoid duplicates
 const workspaceIndicator = app.querySelector(".workspace-indicator")!;
@@ -85,15 +128,49 @@ function showBubble(message: string, duration: number = 5000) {
   }, duration);
 }
 
-// State-specific messages
-const stateMessages: Partial<Record<ClaudyState, string>> = {
-  wake: "Ready to help!",
-  happy: "Task complete!",
-  confused: "Hmm, something went wrong...",
-  listening: "I'm listening...",
-  thinking: "Let me think...",
-  working: "Working on it...",
+// State-specific messages (random selection)
+const stateMessages: Partial<Record<ClaudyState, string[]>> = {
+  wake: [
+    "Ready to help!",
+    "What's up?",
+    "Hey there!",
+    "At your service!",
+  ],
+  happy: [
+    "Task complete!",
+    "Done and done!",
+    "Nailed it!",
+    "All finished!",
+  ],
+  confused: [
+    "Hmm, something went wrong...",
+    "That didn't work...",
+    "Oops, let me check that...",
+    "Well, that's odd...",
+  ],
+  listening: [
+    "I'm listening...",
+    "Go on...",
+    "Tell me more...",
+    "Mhm...",
+  ],
+  thinking: [
+    "Let me think...",
+    "Hmm...",
+    "Processing...",
+    "One moment...",
+  ],
+  working: [
+    "Working on it...",
+    "On it!",
+    "Doing the thing...",
+    "Busy busy...",
+  ],
 };
+
+function pickRandom<T>(arr: T[]): T {
+  return arr[Math.floor(Math.random() * arr.length)];
+}
 
 // Handle state update (shared between Tauri and WebSocket)
 function handleStateUpdate(state: ClaudyState, projects?: string[]) {
@@ -105,16 +182,19 @@ function handleStateUpdate(state: ClaudyState, projects?: string[]) {
   // Update state label
   stateLabel.textContent = state;
 
+  // Toggle matrix effect for working state
+  setMatrixActive(state === 'working');
+
   // Update projects if provided (WebSocket sends full state)
   if (projects) {
     activeProjects = projects;
     renderProjectSwitcher();
   }
 
-  // Show bubble for certain states
-  const message = stateMessages[state];
-  if (message) {
-    showBubble(message);
+  // Show bubble for certain states (pick random variant)
+  const messages = stateMessages[state];
+  if (messages) {
+    showBubble(pickRandom(messages));
   }
 }
 

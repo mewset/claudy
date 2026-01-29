@@ -22,6 +22,7 @@
   left: 50%;
   transform: translate(-50%, -50%) scale(0.5);
   transform-origin: center center;
+  z-index: 2; /* Above matrix background */
 }
 
 /* Eyes are positioned higher (256,160 instead of 256,256 in 512 canvas) */
@@ -349,4 +350,55 @@
   50% {
     transform: translate(-50%, -59%) scale(0.5) scaleY(0.5);
   }
+}
+
+/* ===========================================
+   MATRIX HACKER BACKGROUND (working state)
+   =========================================== */
+.matrix-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 15, 0, 0.5);
+  overflow: hidden;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s ease, visibility 0.3s ease;
+  pointer-events: none;
+  z-index: 1; /* Behind sprites (z-index: 2) */
+  border-radius: 50%;
+}
+
+.matrix-overlay.active {
+  opacity: 1;
+  visibility: visible;
+}
+
+.matrix-row {
+  font-family: monospace;
+  font-size: 10px;
+  color: rgba(0, 255, 70, 0.7);
+  white-space: nowrap;
+  line-height: 1.2;
+  text-shadow: 0 0 4px rgba(0, 255, 70, 0.5);
+}
+
+.matrix-row:nth-child(odd) {
+  animation: matrix-scroll-right 4s linear infinite;
+}
+
+.matrix-row:nth-child(even) {
+  animation: matrix-scroll-left 4s linear infinite;
+}
+
+@keyframes matrix-scroll-right {
+  from { transform: translateX(-50%); }
+  to { transform: translateX(0%); }
+}
+
+@keyframes matrix-scroll-left {
+  from { transform: translateX(0%); }
+  to { transform: translateX(-50%); }
 }
