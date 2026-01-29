@@ -10,7 +10,7 @@
     "tauri": "tauri"
   },
   "dependencies": {
-    "@rive-app/canvas": "^2.34.2",
+    "lottie-web": "^5.12.2",
     "@tauri-apps/api": "^2"
   },
   "devDependencies": {
