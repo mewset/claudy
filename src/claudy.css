@@ -1,0 +1,352 @@
+/* ===========================================
+   CLAUDY CSS ANIMATIONS
+   Replaces Lottie with pure CSS animations
+   =========================================== */
+
+/* Container setup */
+.claudy-wrapper {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+
+/* Base sprite positioning */
+.claudy-sprite {
+  position: absolute;
+  width: 200%;
+  height: 200%;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0.5);
+  transform-origin: center center;
+}
+
+/* Eyes are positioned higher (256,160 instead of 256,256 in 512 canvas) */
+/* Offset: (256-160)/512 = 18.75% of canvas → ~9% of sprite element */
+.claudy-eyes {
+  transform: translate(-50%, -59%) scale(0.5);
+}
+
+/* ===========================================
+   STATE: idle - static, no animation
+   =========================================== */
+.claudy-state-idle .claudy-sprite {
+  animation: none;
+}
+
+/* ===========================================
+   STATE: breathing - subtle life signs
+   =========================================== */
+.claudy-state-breathing .claudy-eyes {
+  animation: claudy-blink 0.8s ease-in-out forwards;
+}
+
+.claudy-state-breathing .claudy-body {
+  animation: claudy-breathe 3s ease-in-out;
+}
+
+@keyframes claudy-blink {
+  0%, 100% {
+    transform: translate(-50%, -59%) scale(0.5) scaleY(1);
+  }
+  40%, 60% {
+    transform: translate(-50%, -59%) scale(0.5) scaleY(0.1);
+  }
+}
+
+@keyframes claudy-breathe {
+  0%, 100% {
+    transform: translate(-50%, -50%) scale(0.5) scaleX(1);
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(0.5) scaleX(1.04);
+  }
+}
+
+/* ===========================================
+   STATE: intro - entrance animation
+   =========================================== */
+.claudy-state-intro {
+  animation: claudy-intro-container 1.2s ease-out forwards;
+}
+
+@keyframes claudy-intro-container {
+  0% {
+    transform: translateY(150%) rotate(0deg);
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+  70% {
+    transform: translateY(-10%) rotate(360deg);
+  }
+  85% {
+    transform: translateY(5%) rotate(360deg);
+  }
+  100% {
+    transform: translateY(0) rotate(360deg);
+  }
+}
+
+/* ===========================================
+   STATE: wake - quick bounce
+   =========================================== */
+.claudy-state-wake {
+  animation: claudy-wake 0.6s ease-out forwards;
+}
+
+.claudy-state-wake .claudy-eyes {
+  animation: claudy-eyes-open 0.4s ease-out forwards;
+}
+
+@keyframes claudy-wake {
+  0%, 100% {
+    transform: translateY(0) scale(1);
+  }
+  30% {
+    transform: translateY(-15%) scale(1.05);
+  }
+  60% {
+    transform: translateY(3%) scale(0.98);
+  }
+}
+
+@keyframes claudy-eyes-open {
+  0% {
+    transform: translate(-50%, -59%) scale(0.5) scaleY(0.1);
+  }
+  100% {
+    transform: translate(-50%, -59%) scale(0.5) scaleY(1);
+  }
+}
+
+/* ===========================================
+   STATE: listening - attentive, slight tilt
+   =========================================== */
+.claudy-state-listening {
+  animation: claudy-listening 2s ease-in-out infinite;
+}
+
+@keyframes claudy-listening {
+  0%, 100% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(3deg);
+  }
+  75% {
+    transform: rotate(-3deg);
+  }
+}
+
+/* ===========================================
+   STATE: thinking - looking around
+   =========================================== */
+.claudy-state-thinking .claudy-eyes {
+  animation: claudy-think-eyes 2s ease-in-out infinite;
+}
+
+.claudy-state-thinking .claudy-body {
+  animation: claudy-think-body 3s ease-in-out infinite;
+}
+
+@keyframes claudy-think-eyes {
+  0%, 100% {
+    transform: translate(-50%, -59%) scale(0.5);
+  }
+  30% {
+    transform: translate(-45%, -65%) scale(0.5);
+  }
+  70% {
+    transform: translate(-55%, -65%) scale(0.5);
+  }
+}
+
+@keyframes claudy-think-body {
+  0%, 100% {
+    transform: translate(-50%, -50%) scale(0.5);
+  }
+  50% {
+    transform: translate(-50%, -52%) scale(0.5);
+  }
+}
+
+/* ===========================================
+   STATE: working - focused bobbing
+   =========================================== */
+.claudy-state-working {
+  animation: claudy-working 0.8s ease-in-out infinite;
+}
+
+.claudy-state-working .claudy-claws {
+  animation: claudy-claws-work 0.4s ease-in-out infinite;
+}
+
+@keyframes claudy-working {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-3%);
+  }
+}
+
+@keyframes claudy-claws-work {
+  0%, 100% {
+    transform: translate(-50%, -50%) scale(0.5) rotate(0deg);
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(0.5) rotate(5deg);
+  }
+}
+
+/* ===========================================
+   STATE: talking - responding to user (one-shot, loops 3x)
+   =========================================== */
+.claudy-state-talking {
+  animation: claudy-talking-body 0.6s ease-in-out 3 forwards;
+}
+
+.claudy-state-talking .claudy-eyes {
+  animation: claudy-talking-eyes 0.6s ease-in-out 3 forwards;
+}
+
+.claudy-state-talking .claudy-claws {
+  animation: claudy-talking-gesture 0.6s ease-in-out 3 forwards;
+}
+
+@keyframes claudy-talking-body {
+  0%, 100% {
+    transform: translateY(0) scale(1);
+  }
+  50% {
+    transform: translateY(-8%) scale(1.08);
+  }
+}
+
+@keyframes claudy-talking-eyes {
+  0%, 100% {
+    transform: translate(-50%, -59%) scale(0.5) scaleY(1);
+  }
+  15%, 35% {
+    transform: translate(-50%, -59%) scale(0.5) scaleY(0.85);
+  }
+  50% {
+    transform: translate(-50%, -59%) scale(0.5) scaleY(1);
+  }
+}
+
+@keyframes claudy-talking-gesture {
+  0%, 100% {
+    transform: translate(-50%, -50%) scale(0.5) rotate(0deg);
+  }
+  25% {
+    transform: translate(-48%, -50%) scale(0.5) rotate(-3deg);
+  }
+  75% {
+    transform: translate(-52%, -50%) scale(0.5) rotate(3deg);
+  }
+}
+
+/* ===========================================
+   STATE: happy - celebratory bounce
+   =========================================== */
+.claudy-state-happy {
+  animation: claudy-happy 0.8s ease-out forwards;
+}
+
+.claudy-state-happy .claudy-eyes {
+  animation: claudy-happy-eyes 0.8s ease-out forwards;
+}
+
+@keyframes claudy-happy {
+  0% {
+    transform: translateY(0) scale(1);
+  }
+  25% {
+    transform: translateY(-20%) scale(1.1);
+  }
+  50% {
+    transform: translateY(0) scale(1);
+  }
+  75% {
+    transform: translateY(-10%) scale(1.05);
+  }
+  100% {
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes claudy-happy-eyes {
+  0%, 100% {
+    transform: translate(-50%, -59%) scale(0.5) scaleY(1);
+  }
+  25%, 75% {
+    transform: translate(-50%, -59%) scale(0.5) scaleY(0.7);
+  }
+}
+
+/* ===========================================
+   STATE: confused - head tilt + scratch
+   =========================================== */
+.claudy-state-confused {
+  animation: claudy-confused 1s ease-out forwards;
+}
+
+.claudy-state-confused .claudy-claws {
+  animation: claudy-scratch 1s ease-out forwards;
+}
+
+@keyframes claudy-confused {
+  0%, 100% {
+    transform: rotate(0deg);
+  }
+  30%, 70% {
+    transform: rotate(-10deg);
+  }
+}
+
+@keyframes claudy-scratch {
+  0%, 100% {
+    transform: translate(-50%, -50%) scale(0.5);
+  }
+  20%, 40%, 60%, 80% {
+    transform: translate(-50%, -55%) scale(0.5);
+  }
+  30%, 50%, 70% {
+    transform: translate(-50%, -50%) scale(0.5);
+  }
+}
+
+/* ===========================================
+   STATE: sleepy - drooping, slow breathing
+   =========================================== */
+.claudy-state-sleepy {
+  animation: claudy-sleepy-body 4s ease-in-out infinite;
+}
+
+.claudy-state-sleepy .claudy-eyes {
+  animation: claudy-sleepy-eyes 4s ease-in-out infinite;
+}
+
+@keyframes claudy-sleepy-body {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(3%);
+  }
+}
+
+@keyframes claudy-sleepy-eyes {
+  0%, 100% {
+    transform: translate(-50%, -59%) scale(0.5) scaleY(0.3);
+  }
+  50% {
+    transform: translate(-50%, -59%) scale(0.5) scaleY(0.5);
+  }
+}
