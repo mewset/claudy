@@ -2,6 +2,7 @@ import { defineConfig } from "vite";
 
 export default defineConfig({
   clearScreen: false,
+  base: "./", // Relative paths for Tauri compatibility
   server: {
     host: true,
     port: 5173,

@@ -3,6 +3,99 @@
    Replaces Lottie with pure CSS animations
    =========================================== */
 
+/* ===========================================
+   BASE STYLES
+   =========================================== */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: transparent;
+  overflow: hidden;
+  font-family: system-ui, -apple-system, sans-serif;
+}
+
+#app {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 10px;
+}
+
+/* ===========================================
+   PROJECT SWITCHER
+   =========================================== */
+.project-switcher {
+  text-align: center;
+  margin-bottom: 8px;
+}
+
+.workspace-indicator {
+  font-family: monospace;
+  font-size: 10px;
+  color: #666;
+  letter-spacing: 2px;
+  min-height: 14px;
+}
+
+/* ===========================================
+   CLAUDY ANIMATION CONTAINER
+   =========================================== */
+#claudy-animation {
+  width: 120px;
+  height: 120px;
+}
+
+#claudy-animation svg {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+/* ===========================================
+   PLACEHOLDER (fallback when no animation)
+   =========================================== */
+.claudy-placeholder {
+  width: 120px;
+  height: 120px;
+  background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+  border-radius: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  box-shadow: 0 4px 20px rgba(249, 115, 22, 0.4);
+}
+
+.face {
+  font-size: 24px;
+  text-align: center;
+}
+
+.eyes {
+  margin-bottom: -2px;
+}
+
+.mouth {
+  font-size: 20px;
+}
+
+.state-label {
+  margin-top: 8px;
+  font-size: 10px;
+  opacity: 0.8;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+/* ===========================================
+   SPRITE CONTAINER SETUP
+   =========================================== */
+
 /* Container setup */
 .claudy-wrapper {
   position: relative;
