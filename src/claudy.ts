@@ -48,25 +48,32 @@ export class ClaudyAnimation {
   private loadAnimation(state: ClaudyState, loop: boolean = true) {
     if (!this.container) return;
 
-    // Destroy previous animation
-    if (this.currentAnimation) {
-      this.currentAnimation.destroy();
-    }
+    const previousAnimation = this.currentAnimation;
 
-    // Load new animation
-    this.currentAnimation = lottie.loadAnimation({
+    // Load new animation (hidden until ready)
+    const newAnimation = lottie.loadAnimation({
       container: this.container,
       renderer: "svg",
       loop: loop,
-      autoplay: true,
+      autoplay: false,
       path: this.animationPaths[state],
     });
 
+    // Wait for new animation to be ready before swapping
+    newAnimation.addEventListener("DOMLoaded", () => {
+      // Destroy previous animation now that new one is ready
+      if (previousAnimation) {
+        previousAnimation.destroy();
+      }
+      newAnimation.play();
+    });
+
+    this.currentAnimation = newAnimation;
     this.currentState = state;
 
     // For one-shot animations, return to idle after
     if (!loop) {
-      this.currentAnimation.addEventListener("complete", () => {
+      newAnimation.addEventListener("complete", () => {
         this.loadAnimation("idle", true);
       });
     }
@@ -97,26 +104,32 @@ export class ClaudyAnimation {
     if (!this.container || this.currentState !== "idle") return;
 
     this.isPlayingBreathing = true;
+    const previousAnimation = this.currentAnimation;
 
-    if (this.currentAnimation) {
-      this.currentAnimation.destroy();
-    }
-
-    this.currentAnimation = lottie.loadAnimation({
+    const newAnimation = lottie.loadAnimation({
       container: this.container,
       renderer: "svg",
       loop: false,
-      autoplay: true,
+      autoplay: false,
       path: this.breathingIdlePath,
     });
 
-    this.currentAnimation.addEventListener("complete", () => {
+    newAnimation.addEventListener("DOMLoaded", () => {
+      if (previousAnimation) {
+        previousAnimation.destroy();
+      }
+      newAnimation.play();
+    });
+
+    newAnimation.addEventListener("complete", () => {
       this.isPlayingBreathing = false;
       // Return to regular idle and restart timer
       if (this.currentState === "idle") {
         this.loadAnimation("idle", true);
       }
     });
+
+    this.currentAnimation = newAnimation;
   }
 
   setState(state: ClaudyState) {
