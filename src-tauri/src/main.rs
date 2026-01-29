@@ -25,10 +25,7 @@ fn get_state(state: State<SharedState>) -> String {
 #[tauri::command]
 fn get_active_projects(state: State<SharedState>) -> Vec<String> {
     let s = state.lock().unwrap();
-    let projects = s.active_projects.clone();
-    #[cfg(debug_assertions)]
-    println!("get_active_projects called, returning: {:?}", projects);
-    projects
+    s.active_projects.clone()
 }
 
 #[tauri::command]
@@ -45,8 +42,6 @@ fn send_notification(app: tauri::AppHandle, title: &str, body: &str) -> Result<(
 
 fn main() {
     let cfg = config::load_config();
-    #[cfg(debug_assertions)]
-    println!("Config loaded: {:?}", cfg);
 
     let shared_state: SharedState = Arc::new(Mutex::new(ClaudyState::new()));
     let state_for_watcher = shared_state.clone();
@@ -93,23 +88,13 @@ fn main() {
 
             std::thread::spawn(move || {
                 let watcher_result = SessionWatcher::new(move |event| {
-                    #[cfg(debug_assertions)]
-                    println!("Claude event: {:?}", event);
-
                     let mut s = state_clone.lock().unwrap();
                     s.handle_event(event);
                     let current_state = s.current_state.clone();
-                    let active_projects = s.active_projects.clone();
                     drop(s); // Release lock before emitting
 
-                    #[cfg(debug_assertions)]
-                    println!("State: {}, Active projects: {:?}", current_state, active_projects);
-
                     // Emit event to frontend
-                    match app_handle.emit("claudy-state-change", &current_state) {
-                        Ok(_) => println!("Emitted state: {}", current_state),
-                        Err(e) => println!("Failed to emit: {}", e),
-                    }
+                    let _ = app_handle.emit("claudy-state-change", &current_state);
                 });
 
                 match watcher_result {

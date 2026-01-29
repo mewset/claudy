@@ -2,7 +2,6 @@ import { listen } from "@tauri-apps/api/event";
 import { invoke } from "@tauri-apps/api/core";
 import type { ClaudyState } from "./claudy";
 
-console.log("Claudy starting...");
 
 let activeProjects: string[] = [];
 let focusedIndex = 0;
@@ -33,9 +32,7 @@ const projectName = app.querySelector(".project-name")!;
 
 async function updateProjects() {
   try {
-    console.log("Fetching active projects...");
     activeProjects = await invoke<string[]>("get_active_projects");
-    console.log("Got active projects:", activeProjects);
     renderProjectSwitcher();
   } catch (e) {
     console.error("Failed to get projects:", e);
@@ -104,10 +101,8 @@ const stateMessages: Partial<Record<ClaudyState, string>> = {
 };
 
 // Listen for state changes from backend
-console.log("Setting up state change listener...");
 listen<string>("claudy-state-change", async (event) => {
   const state = event.payload as ClaudyState;
-  console.log("🔔 STATE CHANGE RECEIVED:", state);
   updatePlaceholder(state);
 
   // Update projects list
@@ -118,10 +113,6 @@ listen<string>("claudy-state-change", async (event) => {
   if (message) {
     showBubble(message);
   }
-}).then(() => {
-  console.log("✅ State change listener registered successfully");
-}).catch((e) => {
-  console.error("❌ Failed to register listener:", e);
 });
 
 function updatePlaceholder(state: ClaudyState) {
