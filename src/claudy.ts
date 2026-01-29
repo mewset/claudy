@@ -16,6 +16,9 @@ export class ClaudyAnimation {
   private currentAnimation: AnimationItem | null = null;
   private currentState: ClaudyState = "idle";
   private animationPaths: Record<ClaudyState, string>;
+  private breathingIdlePath: string;
+  private idleTimer: ReturnType<typeof setTimeout> | null = null;
+  private isPlayingBreathing: boolean = false;
 
   constructor(basePath: string = "/animations") {
     // Each state is a Lottie JSON-animation
@@ -30,6 +33,7 @@ export class ClaudyAnimation {
       confused: `${basePath}/confused.json`,
       sleepy: `${basePath}/sleepy.json`,
     };
+    this.breathingIdlePath = `${basePath}/breathing-idle.json`;
   }
 
   init(container: HTMLElement, playIntro: boolean = true) {
@@ -66,10 +70,60 @@ export class ClaudyAnimation {
         this.loadAnimation("idle", true);
       });
     }
+
+    // Start/stop idle breathing timer based on state
+    if (state === "idle") {
+      this.startIdleTimer();
+    } else {
+      this.stopIdleTimer();
+    }
+  }
+
+  private startIdleTimer() {
+    this.stopIdleTimer();
+    // Random interval between 10-15 seconds
+    const delay = 10000 + Math.random() * 5000;
+    this.idleTimer = setTimeout(() => this.playBreathingIdle(), delay);
+  }
+
+  private stopIdleTimer() {
+    if (this.idleTimer) {
+      clearTimeout(this.idleTimer);
+      this.idleTimer = null;
+    }
+  }
+
+  private playBreathingIdle() {
+    if (!this.container || this.currentState !== "idle") return;
+
+    this.isPlayingBreathing = true;
+
+    if (this.currentAnimation) {
+      this.currentAnimation.destroy();
+    }
+
+    this.currentAnimation = lottie.loadAnimation({
+      container: this.container,
+      renderer: "svg",
+      loop: false,
+      autoplay: true,
+      path: this.breathingIdlePath,
+    });
+
+    this.currentAnimation.addEventListener("complete", () => {
+      this.isPlayingBreathing = false;
+      // Return to regular idle and restart timer
+      if (this.currentState === "idle") {
+        this.loadAnimation("idle", true);
+      }
+    });
   }
 
   setState(state: ClaudyState) {
-    if (state === this.currentState) return;
+    // Allow interrupting breathing animation
+    if (state === this.currentState && !this.isPlayingBreathing) return;
+
+    this.isPlayingBreathing = false;
 
     // Determine if this is a looping or one-shot state
     const oneShotStates: ClaudyState[] = ["intro", "wake", "happy", "confused"];
@@ -79,6 +133,7 @@ export class ClaudyAnimation {
   }
 
   destroy() {
+    this.stopIdleTimer();
     if (this.currentAnimation) {
       this.currentAnimation.destroy();
       this.currentAnimation = null;
