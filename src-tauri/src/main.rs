@@ -42,6 +42,12 @@ fn send_notification(app: tauri::AppHandle, title: &str, body: &str) -> Result<(
         .map_err(|e| e.to_string())
 }
 
+#[tauri::command]
+fn get_appearance_config() -> config::AppearanceConfig {
+    let cfg = config::load_config();
+    cfg.appearance
+}
+
 fn main() {
     let cfg = config::load_config();
 
@@ -56,7 +62,7 @@ fn main() {
     tauri::Builder::default()
         .plugin(tauri_plugin_notification::init())
         .manage(shared_state)
-        .invoke_handler(tauri::generate_handler![get_state, get_active_projects, send_notification])
+        .invoke_handler(tauri::generate_handler![get_state, get_active_projects, send_notification, get_appearance_config])
         .setup(move |app| {
             // Start WebSocket server in tokio runtime
             let state_for_ws_clone = state_for_ws.clone();

@@ -32,6 +32,8 @@ pub struct AppearanceConfig {
     pub size: String,
     #[serde(default = "default_theme")]
     pub theme: String,
+    #[serde(default)]
+    pub background: Option<String>, // e.g., "#1a1a2e" or None for transparent
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -116,6 +118,7 @@ impl Default for AppearanceConfig {
         Self {
             size: default_size(),
             theme: default_theme(),
+            background: None, // Transparent by default
         }
     }
 }

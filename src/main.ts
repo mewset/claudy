@@ -1,8 +1,11 @@
 import { ClaudyAnimation, ClaudyState } from "./claudy-css";
 import "./claudy.css";
 
-// Detect if running in Tauri or browser
-const isTauri = '__TAURI__' in window;
+// Detect if running in Tauri or browser (Tauri 2 uses __TAURI_INTERNALS__)
+const isTauri = '__TAURI__' in window || '__TAURI_INTERNALS__' in window;
+console.log("[Claudy] Environment check - isTauri:", isTauri,
+  "__TAURI__:", (window as any).__TAURI__,
+  "__TAURI_INTERNALS__:", (window as any).__TAURI_INTERNALS__);
 
 // Debug mode: show state label with ?debug in URL
 const isDebug = new URLSearchParams(window.location.search).has('debug');
@@ -263,6 +266,18 @@ if (isTauri) {
       renderProjectSwitcher();
     } catch (e) {
       console.error("Failed to get projects:", e);
+    }
+
+    // Apply appearance config (background color)
+    try {
+      const appearance = await invoke<{ background?: string }>("get_appearance_config");
+      console.log("[Claudy] Appearance config:", appearance);
+      if (appearance.background) {
+        console.log("[Claudy] Setting background to:", appearance.background);
+        document.body.style.backgroundColor = appearance.background;
+      }
+    } catch (e) {
+      console.error("Failed to get appearance config:", e);
     }
   });
 } else {
