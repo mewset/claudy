@@ -1,6 +1,7 @@
 import lottie, { AnimationItem } from "lottie-web";
 
 export type ClaudyState =
+  | "intro"
   | "idle"
   | "wake"
   | "listening"
@@ -19,6 +20,7 @@ export class ClaudyAnimation {
   constructor(basePath: string = "/animations") {
     // Each state has its own Lottie JSON file
     this.animationPaths = {
+      intro: `${basePath}/intro.json`,
       idle: `${basePath}/idle.json`,
       wake: `${basePath}/wake.json`,
       listening: `${basePath}/listening.json`,
@@ -30,9 +32,13 @@ export class ClaudyAnimation {
     };
   }
 
-  init(container: HTMLElement) {
+  init(container: HTMLElement, playIntro: boolean = true) {
     this.container = container;
-    this.loadAnimation("idle", true);
+    if (playIntro) {
+      this.loadAnimation("intro", false);
+    } else {
+      this.loadAnimation("idle", true);
+    }
   }
 
   private loadAnimation(state: ClaudyState, loop: boolean = true) {
@@ -54,7 +60,14 @@ export class ClaudyAnimation {
 
     this.currentState = state;
 
-    // For one-shot animations (wake, happy, confused), return to idle after
+    // Special handling for intro - only play frames 1-40
+    if (state === "intro") {
+      this.currentAnimation.addEventListener("DOMLoaded", () => {
+        this.currentAnimation?.playSegments([0, 40], true);
+      });
+    }
+
+    // For one-shot animations, return to idle after
     if (!loop) {
       this.currentAnimation.addEventListener("complete", () => {
         this.loadAnimation("idle", true);
@@ -66,7 +79,7 @@ export class ClaudyAnimation {
     if (state === this.currentState) return;
 
     // Determine if this is a looping or one-shot state
-    const oneShotStates: ClaudyState[] = ["wake", "happy", "confused"];
+    const oneShotStates: ClaudyState[] = ["intro", "wake", "happy", "confused"];
     const isOneShot = oneShotStates.includes(state);
 
     this.loadAnimation(state, !isOneShot);
