@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Claudy</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+      background: transparent;
+      overflow: hidden;
+      font-family: system-ui, -apple-system, sans-serif;
+    }
+    #app {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 10px;
+    }
+    .project-switcher {
+      text-align: center;
+      margin-bottom: 8px;
+    }
+    .workspace-indicator {
+      font-family: monospace;
+      font-size: 10px;
+      color: #666;
+      letter-spacing: 2px;
+      min-height: 14px;
+    }
+    #claudy-animation {
+      position: relative;
+      width: 120px;
+      height: 120px;
+      overflow: hidden;
+      aspect-ratio: 1;
+    }
+
+    #claudy-animation img {
+      display: block;
+    }
+    #claudy-animation svg {
+      width: 100% !important;
+      height: 100% !important;
+    }
+    .claudy-placeholder {
+      width: 120px;
+      height: 120px;
+      background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+      border-radius: 50%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      box-shadow: 0 4px 20px rgba(249, 115, 22, 0.4);
+    }
+    .face {
+      font-size: 24px;
+      text-align: center;
+    }
+    .eyes {
+      margin-bottom: -2px;
+    }
+    .mouth {
+      font-size: 20px;
+    }
+    .state-label {
+      margin-top: 8px;
+      font-size: 10px;
+      opacity: 0.8;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      display: none; /* Hidden by default */
+    }
+    .debug .state-label {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <div id="app"></div>
+  <script type="module" src="/main.ts"></script>
+</body>
+</html>
