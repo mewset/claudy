@@ -8,6 +8,11 @@ node_modules/
 dist/
 src-tauri/target/
 
+# Design assets (not for repo)
+animations/
+claudy-parts/
+Claudy-*.json
+
 # Documentation (local only)
 docs/
 
