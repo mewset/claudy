@@ -23,54 +23,44 @@ impl ClaudyState {
     pub fn handle_event(&mut self, event: ClaudeEvent) {
         self.last_event = Some(event.clone());
 
+        // Helper to ensure project is tracked
+        let track_project = |projects: &mut Vec<String>, focused: &mut Option<String>, project: &String| {
+            if !projects.contains(project) {
+                projects.push(project.clone());
+            }
+            if focused.is_none() {
+                *focused = Some(project.clone());
+            }
+        };
+
         match &event {
             ClaudeEvent::SessionStart { project } => {
-                if !self.active_projects.contains(project) {
-                    self.active_projects.push(project.clone());
-                }
-                if self.focused_project.is_none() {
-                    self.focused_project = Some(project.clone());
-                }
+                track_project(&mut self.active_projects, &mut self.focused_project, project);
                 self.current_state = "wake".to_string();
             }
             ClaudeEvent::UserMessage { project } => {
-                if !self.active_projects.contains(project) {
-                    self.active_projects.push(project.clone());
-                }
-                if self.focused_project.is_none() {
-                    self.focused_project = Some(project.clone());
-                }
+                track_project(&mut self.active_projects, &mut self.focused_project, project);
                 self.current_state = "listening".to_string();
             }
-            ClaudeEvent::AssistantWorking { project } => {
-                if !self.active_projects.contains(project) {
-                    self.active_projects.push(project.clone());
-                }
-                if self.focused_project.is_none() {
-                    self.focused_project = Some(project.clone());
-                }
+            ClaudeEvent::Thinking { project } => {
+                track_project(&mut self.active_projects, &mut self.focused_project, project);
                 self.current_state = "thinking".to_string();
             }
             ClaudeEvent::ToolUse { project, .. } => {
-                if !self.active_projects.contains(project) {
-                    self.active_projects.push(project.clone());
-                }
-                if self.focused_project.is_none() {
-                    self.focused_project = Some(project.clone());
-                }
+                track_project(&mut self.active_projects, &mut self.focused_project, project);
                 self.current_state = "working".to_string();
             }
+            ClaudeEvent::Talking { project } => {
+                track_project(&mut self.active_projects, &mut self.focused_project, project);
+                self.current_state = "talking".to_string();
+            }
+            ClaudeEvent::WaitingForTask { project } => {
+                track_project(&mut self.active_projects, &mut self.focused_project, project);
+                self.current_state = "sleepy".to_string();
+            }
             ClaudeEvent::Stop { project, success } => {
-                // Make sure project is in active list (in case we missed earlier events)
-                if !self.active_projects.contains(project) {
-                    self.active_projects.push(project.clone());
-                }
-                if self.focused_project.is_none() {
-                    self.focused_project = Some(project.clone());
-                }
+                track_project(&mut self.active_projects, &mut self.focused_project, project);
                 self.current_state = if *success { "happy" } else { "confused" }.to_string();
-                // Note: Don't remove project on Stop - keep it visible
-                // User can see which project completed the task
             }
             ClaudeEvent::Error { .. } => {
                 self.current_state = "confused".to_string();
