@@ -5,11 +5,12 @@
 pub mod types;
 pub mod config;
 pub mod analyzer;
+pub mod decider;
 
 pub use types::*;
 pub use config::PersonalityConfig;
 pub use analyzer::Analyzer;
+pub use decider::Decider;
 
 // Submodules to be added in subsequent tasks:
-// pub mod decider;   // Task 5: Comment trigger logic
 // pub mod engine;    // Task 6: Main engine combining everything
