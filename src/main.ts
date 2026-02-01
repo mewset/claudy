@@ -232,9 +232,18 @@ function stateToRawEvent(state: ClaudyState): RawClaudeEvent {
   return { type: typeMap[state] || "waiting", timestamp };
 }
 
+// Flag to suppress personality comments when custom bubble is active
+let suppressPersonalityComments = false;
+
 // Subscribe to context updates for personality-based comments
 contextState.subscribe((ctx) => {
   console.log("[Claudy Engine] Context update:", ctx.event);
+
+  // Skip if custom bubble is active
+  if (suppressPersonalityComments) {
+    console.log("[Claudy Engine] Skipping personality comment (custom bubble active)");
+    return;
+  }
 
   // Get comment from personality engine
   const comment = personalityEngine.selectComment(ctx);
@@ -259,7 +268,12 @@ function handleStateUpdate(state: ClaudyState, projects?: string[], lastEvent?: 
 
   // Show bubble text if provided (for demos/external control)
   if (bubbleText) {
+    suppressPersonalityComments = true;
     showBubble(bubbleText);
+    // Re-enable personality comments after bubble duration
+    setTimeout(() => {
+      suppressPersonalityComments = false;
+    }, 5000);
   }
 
   // Update projects if provided (WebSocket sends full state)
