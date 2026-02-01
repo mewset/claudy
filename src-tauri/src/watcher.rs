@@ -25,10 +25,17 @@ pub enum ClaudeEvent {
     Error { project: String, message: String },
 }
 
+/// Result of parsing a JSONL line
+#[derive(Debug, Clone)]
+pub struct ParsedLine {
+    pub event: ClaudeEvent,
+    pub message_text: Option<String>,
+}
+
 impl SessionWatcher {
     pub fn new<F>(callback: F) -> Result<Self, notify::Error>
     where
-        F: Fn(ClaudeEvent) + Send + 'static,
+        F: Fn(ParsedLine) + Send + 'static,
     {
         let (tx, rx) = channel();
         let file_positions: FilePositions = Arc::new(Mutex::new(HashMap::new()));
@@ -48,8 +55,8 @@ impl SessionWatcher {
             while let Ok(event) = rx.recv() {
                 // Process all new lines, not just the last one
                 let events = parse_file_events(&event, &positions);
-                for claude_event in events {
-                    callback(claude_event);
+                for parsed in events {
+                    callback(parsed);
                 }
             }
         });
@@ -82,7 +89,7 @@ fn path_to_slug(path: &Path) -> String {
         .to_string()
 }
 
-fn parse_file_events(event: &Event, positions: &FilePositions) -> Vec<ClaudeEvent> {
+fn parse_file_events(event: &Event, positions: &FilePositions) -> Vec<ParsedLine> {
     let mut results = Vec::new();
 
     // Only care about modify events on .jsonl files
@@ -126,9 +133,12 @@ fn parse_file_events(event: &Event, positions: &FilePositions) -> Vec<ClaudeEven
     // Read all new lines since last position
     for (i, line) in lines.iter().enumerate() {
         if i >= last_pos {
-            if let Some(claude_event) = parse_jsonl_line(line, &project) {
-                eprintln!("[Claudy] Parsed event: {:?}", claude_event);
-                results.push(claude_event);
+            if let Some(parsed) = parse_jsonl_line(line, &project) {
+                eprintln!("[Claudy] Parsed event: {:?}, text: {:?}",
+                    parsed.event,
+                    parsed.message_text.as_ref().map(|t| &t[..t.len().min(50)])
+                );
+                results.push(parsed);
             }
         }
     }
@@ -139,7 +149,7 @@ fn parse_file_events(event: &Event, positions: &FilePositions) -> Vec<ClaudeEven
     results
 }
 
-fn parse_jsonl_line(line: &str, project: &str) -> Option<ClaudeEvent> {
+fn parse_jsonl_line(line: &str, project: &str) -> Option<ParsedLine> {
     let json: serde_json::Value = serde_json::from_str(line).ok()?;
 
     let event_type = json.get("type")?.as_str()?;
@@ -156,6 +166,29 @@ fn parse_jsonl_line(line: &str, project: &str) -> Option<ClaudeEvent> {
         }
     }
 
+    // Helper to extract text content from message
+    let extract_text = |json: &serde_json::Value| -> Option<String> {
+        let message = json.get("message")?;
+        let content = message.get("content")?.as_array()?;
+
+        // Collect all text content
+        let texts: Vec<&str> = content.iter()
+            .filter_map(|item| {
+                if item.get("type")?.as_str()? == "text" {
+                    item.get("text")?.as_str()
+                } else {
+                    None
+                }
+            })
+            .collect();
+
+        if texts.is_empty() {
+            None
+        } else {
+            Some(texts.join("\n"))
+        }
+    };
+
     match event_type {
         "user" => {
             // Check if this is a real user message or just a tool_result
@@ -167,10 +200,32 @@ fn parse_jsonl_line(line: &str, project: &str) -> Option<ClaudeEvent> {
                             return None;
                         }
                     }
+
+                    // Extract user text
+                    let text = content.iter()
+                        .filter_map(|item| {
+                            if item.get("type")?.as_str()? == "text" {
+                                item.get("text")?.as_str().map(|s| s.to_string())
+                            } else {
+                                None
+                            }
+                        })
+                        .collect::<Vec<_>>()
+                        .join("\n");
+
+                    return Some(ParsedLine {
+                        event: ClaudeEvent::UserMessage {
+                            project: project.to_string(),
+                        },
+                        message_text: if text.is_empty() { None } else { Some(text) },
+                    });
                 }
             }
-            Some(ClaudeEvent::UserMessage {
-                project: project.to_string(),
+            Some(ParsedLine {
+                event: ClaudeEvent::UserMessage {
+                    project: project.to_string(),
+                },
+                message_text: None,
             })
         }
         "assistant" => {
@@ -181,11 +236,15 @@ fn parse_jsonl_line(line: &str, project: &str) -> Option<ClaudeEvent> {
                     // Get the last item in content array
                     if let Some(last_item) = content.last() {
                         let item_type = last_item.get("type").and_then(|t| t.as_str());
+                        let text = extract_text(&json);
 
                         match item_type {
                             Some("thinking") => {
-                                return Some(ClaudeEvent::Thinking {
-                                    project: project.to_string(),
+                                return Some(ParsedLine {
+                                    event: ClaudeEvent::Thinking {
+                                        project: project.to_string(),
+                                    },
+                                    message_text: text,
                                 });
                             }
                             Some("tool_use") => {
@@ -194,14 +253,20 @@ fn parse_jsonl_line(line: &str, project: &str) -> Option<ClaudeEvent> {
                                     .and_then(|n| n.as_str())
                                     .unwrap_or("unknown")
                                     .to_string();
-                                return Some(ClaudeEvent::ToolUse {
-                                    project: project.to_string(),
-                                    tool: tool_name,
+                                return Some(ParsedLine {
+                                    event: ClaudeEvent::ToolUse {
+                                        project: project.to_string(),
+                                        tool: tool_name,
+                                    },
+                                    message_text: text,
                                 });
                             }
                             Some("text") => {
-                                return Some(ClaudeEvent::Talking {
-                                    project: project.to_string(),
+                                return Some(ParsedLine {
+                                    event: ClaudeEvent::Talking {
+                                        project: project.to_string(),
+                                    },
+                                    message_text: text,
                                 });
                             }
                             _ => {}
@@ -219,18 +284,27 @@ fn parse_jsonl_line(line: &str, project: &str) -> Option<ClaudeEvent> {
                 "hook_progress" => {
                     let hook_event = data.get("hookEvent")?.as_str()?;
                     match hook_event {
-                        "SessionStart" => Some(ClaudeEvent::SessionStart {
-                            project: project.to_string(),
+                        "SessionStart" => Some(ParsedLine {
+                            event: ClaudeEvent::SessionStart {
+                                project: project.to_string(),
+                            },
+                            message_text: None,
                         }),
-                        "Stop" => Some(ClaudeEvent::Stop {
-                            project: project.to_string(),
-                            success: true,
+                        "Stop" => Some(ParsedLine {
+                            event: ClaudeEvent::Stop {
+                                project: project.to_string(),
+                                success: true,
+                            },
+                            message_text: None,
                         }),
                         _ => None,
                     }
                 }
-                "waiting_for_task" => Some(ClaudeEvent::WaitingForTask {
-                    project: project.to_string(),
+                "waiting_for_task" => Some(ParsedLine {
+                    event: ClaudeEvent::WaitingForTask {
+                        project: project.to_string(),
+                    },
+                    message_text: None,
                 }),
                 _ => None,
             }
@@ -241,9 +315,12 @@ fn parse_jsonl_line(line: &str, project: &str) -> Option<ClaudeEvent> {
             if subtype == "stop_hook_summary" {
                 if let Some(errors) = json.get("hookErrors").and_then(|e| e.as_array()) {
                     if !errors.is_empty() {
-                        return Some(ClaudeEvent::Error {
-                            project: project.to_string(),
-                            message: "Hook error".to_string(),
+                        return Some(ParsedLine {
+                            event: ClaudeEvent::Error {
+                                project: project.to_string(),
+                                message: "Hook error".to_string(),
+                            },
+                            message_text: None,
                         });
                     }
                 }
