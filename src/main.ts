@@ -11,7 +11,7 @@ interface BackendEvent {
   SessionStart?: { project: string };
   UserMessage?: { project: string };
   Thinking?: { project: string };
-  ToolUse?: { project: string; tool: string };
+  ToolUse?: { project: string; tool: string; file_path?: string };
   Talking?: { project: string };
   WaitingForTask?: { project: string };
   Stop?: { project: string; success: boolean };
@@ -184,6 +184,7 @@ function backendEventToRawEvent(event: BackendEvent): RawClaudeEvent {
       type: "tool_use",
       timestamp,
       tool_name: event.ToolUse.tool,
+      file_path: event.ToolUse.file_path,
     };
   }
   if (event.Talking) {
