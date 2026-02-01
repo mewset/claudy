@@ -12,11 +12,13 @@ mod watcher;
 mod state;
 mod window;
 mod websocket;
+mod personality;
 
 use state::{ClaudyState, SharedState};
 use watcher::SessionWatcher;
 use window::position_window;
 use websocket::StateBroadcaster;
+use personality::PersonalityEngine;
 
 #[tauri::command]
 fn get_state(state: State<SharedState>) -> String {
@@ -49,7 +51,7 @@ fn get_appearance_config() -> config::AppearanceConfig {
 }
 
 fn main() {
-    let cfg = config::load_config();
+    let _cfg = config::load_config();
 
     let shared_state: SharedState = Arc::new(Mutex::new(ClaudyState::new()));
     let state_for_watcher = shared_state.clone();
@@ -109,24 +111,45 @@ fn main() {
                 position_window(&window, &cfg);
             }
 
+            // Create personality engine
+            let personality_engine = Arc::new(Mutex::new(
+                PersonalityEngine::new()
+                    .expect("Failed to load personality config")
+            ));
+
             // Start watcher for registered projects
             let cfg = config::load_config();
             let state_clone = state_for_watcher.clone();
             let app_handle = app.handle().clone();
             let ws_broadcaster_for_watcher = ws_broadcaster.clone();
+            let engine_for_watcher = personality_engine.clone();
 
             std::thread::spawn(move || {
-                let watcher_result = SessionWatcher::new(move |event| {
-                    eprintln!("[Claudy] Processing event: {:?}", event);
-                    let mut s = state_clone.lock().unwrap();
-                    s.handle_event(event);
-                    let current_state = s.current_state.clone();
-                    let full_state = s.clone();
-                    drop(s); // Release lock before emitting
+                let watcher_result = SessionWatcher::new(move |parsed| {
+                    eprintln!("[Claudy] Processing event: {:?}", parsed.event);
 
-                    // Emit event to Tauri frontend
-                    eprintln!("[Claudy] Emitting state: {}", current_state);
-                    if let Err(e) = app_handle.emit("claudy-state-change", &current_state) {
+                    // Process through personality engine
+                    let personality_event = {
+                        let mut engine = engine_for_watcher.lock().unwrap();
+                        engine.process(parsed.event, parsed.message_text.as_deref())
+                    };
+
+                    eprintln!("[Claudy] Personality event: context={:?}, mood={:?}, comment={:?}",
+                        personality_event.context,
+                        personality_event.mood,
+                        personality_event.comment
+                    );
+
+                    // Update state with personality event
+                    let full_state = {
+                        let mut s = state_clone.lock().unwrap();
+                        s.handle_personality_event(personality_event);
+                        s.clone()
+                    };
+
+                    // Emit full state to Tauri frontend
+                    eprintln!("[Claudy] Emitting state: {}", full_state.current_state);
+                    if let Err(e) = app_handle.emit("claudy-state-change", &full_state) {
                         eprintln!("[Claudy] Emit error: {}", e);
                     }
 
