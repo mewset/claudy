@@ -18,7 +18,7 @@ pub enum ClaudeEvent {
     SessionStart { project: String },
     UserMessage { project: String },
     Thinking { project: String },
-    ToolUse { project: String, tool: String },
+    ToolUse { project: String, tool: String, file_path: Option<String> },
     Talking { project: String },
     WaitingForTask { project: String },
     Stop { project: String, success: bool },
@@ -194,9 +194,23 @@ fn parse_jsonl_line(line: &str, project: &str) -> Option<ClaudeEvent> {
                                     .and_then(|n| n.as_str())
                                     .unwrap_or("unknown")
                                     .to_string();
+
+                                // Extract file_path from tool input
+                                let file_path = last_item
+                                    .get("input")
+                                    .and_then(|input| {
+                                        // Try common field names for file paths
+                                        input.get("file_path")
+                                            .or_else(|| input.get("path"))
+                                            .or_else(|| input.get("notebook_path"))
+                                            .and_then(|v| v.as_str())
+                                            .map(|s| s.to_string())
+                                    });
+
                                 return Some(ClaudeEvent::ToolUse {
                                     project: project.to_string(),
                                     tool: tool_name,
+                                    file_path,
                                 });
                             }
                             Some("text") => {

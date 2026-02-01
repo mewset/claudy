@@ -1,5 +1,32 @@
 import { ClaudyAnimation, ClaudyState } from "./claudy-css";
+import { ContextState } from "./engine/context";
+import { PersonalityEngine } from "./engine/personality";
+import type { RawClaudeEvent } from "./engine/extraction/types";
 import "./claudy.css";
+
+/**
+ * Backend event type (matches Rust ClaudeEvent enum)
+ */
+interface BackendEvent {
+  SessionStart?: { project: string };
+  UserMessage?: { project: string };
+  Thinking?: { project: string };
+  ToolUse?: { project: string; tool: string; file_path?: string };
+  Talking?: { project: string };
+  WaitingForTask?: { project: string };
+  Stop?: { project: string; success: boolean };
+  Error?: { project: string; message: string };
+}
+
+/**
+ * Full state from backend WebSocket
+ */
+interface BackendState {
+  current_state: string;
+  active_projects: string[];
+  focused_project?: string;
+  last_event?: BackendEvent;
+}
 
 // Detect if running in Tauri or browser (Tauri 2 uses __TAURI_INTERNALS__)
 const isTauri = '__TAURI__' in window || '__TAURI_INTERNALS__' in window;
@@ -37,6 +64,12 @@ app.innerHTML = `
 const animationContainer = app.querySelector("#claudy-animation") as HTMLElement;
 const claudy = new ClaudyAnimation("/claudy-parts");
 claudy.init(animationContainer, true); // true = play intro first
+
+// Initialize engines
+const contextState = new ContextState();
+const personalityEngine = new PersonalityEngine({
+  commentChance: 0.8, // 80% chance to show comment
+});
 
 // Matrix overlay for "working" state
 function generateBinaryString(length: number): string {
@@ -131,55 +164,90 @@ function showBubble(message: string, duration: number = 5000) {
   }, duration);
 }
 
-// State-specific messages (random selection)
-const stateMessages: Partial<Record<ClaudyState, string[]>> = {
-  wake: [
-    "Ready to help!",
-    "What's up?",
-    "Hey there!",
-    "At your service!",
-  ],
-  happy: [
-    "Task complete!",
-    "Done and done!",
-    "Nailed it!",
-    "All finished!",
-  ],
-  confused: [
-    "Hmm, something went wrong...",
-    "That didn't work...",
-    "Oops, let me check that...",
-    "Well, that's odd...",
-  ],
-  listening: [
-    "I'm listening...",
-    "Go on...",
-    "Tell me more...",
-    "Mhm...",
-  ],
-  thinking: [
-    "Let me think...",
-    "Hmm...",
-    "Processing...",
-    "One moment...",
-  ],
-  working: [
-    "Working on it...",
-    "On it!",
-    "Doing the thing...",
-    "Busy busy...",
-  ],
-};
+/**
+ * Convert BackendEvent to RawClaudeEvent for our engine
+ */
+function backendEventToRawEvent(event: BackendEvent): RawClaudeEvent {
+  const timestamp = Date.now();
 
-function pickRandom<T>(arr: T[]): T {
-  return arr[Math.floor(Math.random() * arr.length)];
+  if (event.SessionStart) {
+    return { type: "init", timestamp };
+  }
+  if (event.UserMessage) {
+    return { type: "user", timestamp };
+  }
+  if (event.Thinking) {
+    return { type: "thinking", timestamp };
+  }
+  if (event.ToolUse) {
+    return {
+      type: "tool_use",
+      timestamp,
+      tool_name: event.ToolUse.tool,
+      file_path: event.ToolUse.file_path,
+    };
+  }
+  if (event.Talking) {
+    return { type: "text", timestamp };
+  }
+  if (event.Stop) {
+    return {
+      type: "stop",
+      timestamp,
+      result: event.Stop.success ? "success" : "error",
+    };
+  }
+  if (event.Error) {
+    return {
+      type: "error",
+      timestamp,
+      error: event.Error.message,
+    };
+  }
+  if (event.WaitingForTask) {
+    return { type: "waiting", timestamp };
+  }
+
+  return { type: "waiting", timestamp };
 }
 
-// Handle state update (shared between Tauri and WebSocket)
-function handleStateUpdate(state: ClaudyState, projects?: string[]) {
-  console.log("[Claudy Frontend] Received state:", state);
+/**
+ * Fallback: Create a RawClaudeEvent from ClaudyState when no last_event available
+ */
+function stateToRawEvent(state: ClaudyState): RawClaudeEvent {
+  const timestamp = Date.now();
+  const typeMap: Record<string, string> = {
+    intro: "init",
+    wake: "init",
+    listening: "user",
+    thinking: "thinking",
+    working: "tool_use",
+    talking: "text",
+    happy: "stop",
+    confused: "error",
+    idle: "waiting",
+    sleepy: "waiting",
+  };
+  return { type: typeMap[state] || "waiting", timestamp };
+}
 
-  // Update CSS animation
+// Subscribe to context updates for personality-based comments
+contextState.subscribe((ctx) => {
+  console.log("[Claudy Engine] Context update:", ctx.event);
+
+  // Get comment from personality engine
+  const comment = personalityEngine.selectComment(ctx);
+  if (comment) {
+    console.log("[Claudy Engine] Showing comment:", comment);
+    showBubble(comment);
+  }
+});
+
+// Handle state update (shared between Tauri and WebSocket)
+function handleStateUpdate(state: ClaudyState, projects?: string[], lastEvent?: BackendEvent) {
+  console.log("[Claudy Frontend] Received state:", state, "event:", lastEvent);
+
+  // Update CSS animation (direct, for responsiveness)
   claudy.setState(state);
 
   // Update state label
@@ -192,13 +260,18 @@ function handleStateUpdate(state: ClaudyState, projects?: string[]) {
   if (projects) {
     activeProjects = projects;
     renderProjectSwitcher();
+
+    // Update context state project
+    if (projects.length > 0) {
+      contextState.setProject(projects[focusedIndex] || projects[0]);
+    }
   }
 
-  // Show bubble for certain states (pick random variant)
-  const messages = stateMessages[state];
-  if (messages) {
-    showBubble(pickRandom(messages));
-  }
+  // Feed rich event to context engine (or fallback to state-based)
+  const rawEvent = lastEvent
+    ? backendEventToRawEvent(lastEvent)
+    : stateToRawEvent(state);
+  contextState.handleEvent(rawEvent);
 }
 
 // WebSocket connection for browser mode
@@ -219,10 +292,11 @@ function connectWebSocket() {
 
   ws.onmessage = (event) => {
     try {
-      const data = JSON.parse(event.data);
+      const data = JSON.parse(event.data) as BackendState;
       const state = data.current_state as ClaudyState;
-      const projects = data.active_projects as string[];
-      handleStateUpdate(state, projects);
+      const projects = data.active_projects;
+      const lastEvent = data.last_event;
+      handleStateUpdate(state, projects, lastEvent);
     } catch (e) {
       console.error("[Claudy WS] Failed to parse message:", e);
     }
