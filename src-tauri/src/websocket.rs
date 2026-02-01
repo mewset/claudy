@@ -89,18 +89,18 @@ async fn handle_connection(
                 Ok(Message::Text(text)) => {
                     // Try to parse as state update
                     if let Ok(incoming) = serde_json::from_str::<crate::state::ClaudyState>(&text) {
-                        eprintln!("[Claudy WS] Received state from {}: {}", addr_clone, incoming.current_state);
-                        // Update shared state
+                        eprintln!("[Claudy WS] Received state from {}: {} (bubble: {:?})",
+                            addr_clone, incoming.current_state, incoming.bubble_text);
+                        // Update shared state (but not bubble_text - it's ephemeral)
                         {
                             let mut state = shared_state_clone.lock().unwrap();
-                            state.current_state = incoming.current_state;
+                            state.current_state = incoming.current_state.clone();
                             if !incoming.active_projects.is_empty() {
-                                state.active_projects = incoming.active_projects;
+                                state.active_projects = incoming.active_projects.clone();
                             }
                         }
-                        // Broadcast to all clients
-                        let state = shared_state_clone.lock().unwrap();
-                        if let Ok(json) = serde_json::to_string(&*state) {
+                        // Broadcast incoming state directly (includes bubble_text)
+                        if let Ok(json) = serde_json::to_string(&incoming) {
                             let _ = tx.send(json);
                         }
                     }
