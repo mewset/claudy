@@ -1,10 +1,32 @@
 import { ClaudyAnimation, ClaudyState } from "./claudy-css";
 import { ContextState } from "./engine/context";
 import { PersonalityEngine } from "./engine/personality";
-import type { RawClaudeEvent, ClaudeEventType } from "./engine/extraction/types";
+import type { RawClaudeEvent } from "./engine/extraction/types";
 import "./claudy.css";
-// Note: AnimationEngine is available at ./engine/animation for future use
-// with richer JSONL events (file paths, tool names, etc.)
+
+/**
+ * Backend event type (matches Rust ClaudeEvent enum)
+ */
+interface BackendEvent {
+  SessionStart?: { project: string };
+  UserMessage?: { project: string };
+  Thinking?: { project: string };
+  ToolUse?: { project: string; tool: string };
+  Talking?: { project: string };
+  WaitingForTask?: { project: string };
+  Stop?: { project: string; success: boolean };
+  Error?: { project: string; message: string };
+}
+
+/**
+ * Full state from backend WebSocket
+ */
+interface BackendState {
+  current_state: string;
+  active_projects: string[];
+  focused_project?: string;
+  last_event?: BackendEvent;
+}
 
 // Detect if running in Tauri or browser (Tauri 2 uses __TAURI_INTERNALS__)
 const isTauri = '__TAURI__' in window || '__TAURI_INTERNALS__' in window;
@@ -143,41 +165,69 @@ function showBubble(message: string, duration: number = 5000) {
 }
 
 /**
- * Map ClaudyState to ClaudeEventType for the context engine
+ * Convert BackendEvent to RawClaudeEvent for our engine
  */
-function stateToEventType(state: ClaudyState): ClaudeEventType {
-  switch (state) {
-    case "intro":
-      return "session_start";
-    case "listening":
-      return "user_message";
-    case "thinking":
-      return "thinking";
-    case "working":
-      return "tool_use";
-    case "talking":
-      return "talking";
-    case "happy":
-      return "stop";
-    case "confused":
-      return "error";
-    case "wake":
-    case "idle":
-    case "sleepy":
-    default:
-      return "waiting";
+function backendEventToRawEvent(event: BackendEvent): RawClaudeEvent {
+  const timestamp = Date.now();
+
+  if (event.SessionStart) {
+    return { type: "init", timestamp };
   }
+  if (event.UserMessage) {
+    return { type: "user", timestamp };
+  }
+  if (event.Thinking) {
+    return { type: "thinking", timestamp };
+  }
+  if (event.ToolUse) {
+    return {
+      type: "tool_use",
+      timestamp,
+      tool_name: event.ToolUse.tool,
+    };
+  }
+  if (event.Talking) {
+    return { type: "text", timestamp };
+  }
+  if (event.Stop) {
+    return {
+      type: "stop",
+      timestamp,
+      result: event.Stop.success ? "success" : "error",
+    };
+  }
+  if (event.Error) {
+    return {
+      type: "error",
+      timestamp,
+      error: event.Error.message,
+    };
+  }
+  if (event.WaitingForTask) {
+    return { type: "waiting", timestamp };
+  }
+
+  return { type: "waiting", timestamp };
 }
 
 /**
- * Create a RawClaudeEvent from ClaudyState
- * This is an adapter for the legacy state-based system
+ * Fallback: Create a RawClaudeEvent from ClaudyState when no last_event available
  */
 function stateToRawEvent(state: ClaudyState): RawClaudeEvent {
-  return {
-    type: stateToEventType(state),
-    timestamp: Date.now(),
+  const timestamp = Date.now();
+  const typeMap: Record<string, string> = {
+    intro: "init",
+    wake: "init",
+    listening: "user",
+    thinking: "thinking",
+    working: "tool_use",
+    talking: "text",
+    happy: "stop",
+    confused: "error",
+    idle: "waiting",
+    sleepy: "waiting",
   };
+  return { type: typeMap[state] || "waiting", timestamp };
 }
 
 // Subscribe to context updates for personality-based comments
@@ -193,8 +243,8 @@ contextState.subscribe((ctx) => {
 });
 
 // Handle state update (shared between Tauri and WebSocket)
-function handleStateUpdate(state: ClaudyState, projects?: string[]) {
-  console.log("[Claudy Frontend] Received state:", state);
+function handleStateUpdate(state: ClaudyState, projects?: string[], lastEvent?: BackendEvent) {
+  console.log("[Claudy Frontend] Received state:", state, "event:", lastEvent);
 
   // Update CSS animation (direct, for responsiveness)
   claudy.setState(state);
@@ -216,8 +266,10 @@ function handleStateUpdate(state: ClaudyState, projects?: string[]) {
     }
   }
 
-  // Feed state to context engine for personality-based comments
-  const rawEvent = stateToRawEvent(state);
+  // Feed rich event to context engine (or fallback to state-based)
+  const rawEvent = lastEvent
+    ? backendEventToRawEvent(lastEvent)
+    : stateToRawEvent(state);
   contextState.handleEvent(rawEvent);
 }
 
@@ -239,10 +291,11 @@ function connectWebSocket() {
 
   ws.onmessage = (event) => {
     try {
-      const data = JSON.parse(event.data);
+      const data = JSON.parse(event.data) as BackendState;
       const state = data.current_state as ClaudyState;
-      const projects = data.active_projects as string[];
-      handleStateUpdate(state, projects);
+      const projects = data.active_projects;
+      const lastEvent = data.last_event;
+      handleStateUpdate(state, projects, lastEvent);
     } catch (e) {
       console.error("[Claudy WS] Failed to parse message:", e);
     }
