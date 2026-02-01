@@ -48,6 +48,25 @@ fn get_appearance_config() -> config::AppearanceConfig {
     cfg.appearance
 }
 
+#[tauri::command]
+fn get_full_config() -> config::Config {
+    config::load_config()
+}
+
+#[tauri::command]
+fn save_appearance_config(background: Option<String>) -> Result<(), String> {
+    let mut cfg = config::load_config();
+    cfg.appearance.background = background;
+    config::save_config(&cfg).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+fn remove_project(path: String) -> Result<(), String> {
+    let mut cfg = config::load_config();
+    cfg.projects.registered.retain(|p| p != &path);
+    config::save_config(&cfg).map_err(|e| e.to_string())
+}
+
 fn main() {
     let cfg = config::load_config();
 
@@ -62,7 +81,7 @@ fn main() {
     tauri::Builder::default()
         .plugin(tauri_plugin_notification::init())
         .manage(shared_state)
-        .invoke_handler(tauri::generate_handler![get_state, get_active_projects, send_notification, get_appearance_config])
+        .invoke_handler(tauri::generate_handler![get_state, get_active_projects, send_notification, get_appearance_config, get_full_config, save_appearance_config, remove_project])
         .setup(move |app| {
             // Start WebSocket server in tokio runtime
             let state_for_ws_clone = state_for_ws.clone();
@@ -82,7 +101,8 @@ fn main() {
             // Setup tray
             let quit = MenuItem::with_id(app, "quit", "Quit", true, None::<&str>)?;
             let show = MenuItem::with_id(app, "show", "Show/Hide", true, None::<&str>)?;
-            let menu = Menu::with_items(app, &[&show, &quit])?;
+            let config = MenuItem::with_id(app, "config", "Configuration", true, None::<&str>)?;
+            let menu = Menu::with_items(app, &[&show, &config, &quit])?;
 
             let _tray = TrayIconBuilder::new()
                 .icon(app.default_window_icon().unwrap().clone())
@@ -96,6 +116,33 @@ fn main() {
                             } else {
                                 let _ = window.show();
                                 let _ = window.set_focus();
+                            }
+                        }
+                    }
+                    "config" => {
+                        // Check if config window already exists
+                        if let Some(window) = app.get_webview_window("config") {
+                            let _ = window.show();
+                            let _ = window.set_focus();
+                        } else {
+                            // Create new config window
+                            let config_url = if cfg!(debug_assertions) {
+                                "http://localhost:5173/config.html"
+                            } else {
+                                "config.html"
+                            };
+
+                            if let Ok(window) = tauri::WebviewWindowBuilder::new(
+                                app,
+                                "config",
+                                tauri::WebviewUrl::App(config_url.into())
+                            )
+                            .title("Claudy Configuration")
+                            .inner_size(400.0, 500.0)
+                            .resizable(true)
+                            .center()
+                            .build() {
+                                let _ = window.show();
                             }
                         }
                     }

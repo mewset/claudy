@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Claudy Configuration</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background: #1a1a2e;
+      color: #e0e0e0;
+      padding: 20px;
+      min-height: 100vh;
+    }
+    h1 {
+      font-size: 18px;
+      margin-bottom: 20px;
+      color: #f97316;
+    }
+    h2 {
+      font-size: 14px;
+      margin: 20px 0 12px 0;
+      color: #888;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .section {
+      background: #252542;
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+    .field {
+      margin-bottom: 16px;
+    }
+    .field:last-child {
+      margin-bottom: 0;
+    }
+    label {
+      display: block;
+      font-size: 13px;
+      margin-bottom: 6px;
+      color: #aaa;
+    }
+    input[type="text"],
+    input[type="color"] {
+      width: 100%;
+      padding: 8px 12px;
+      border: 1px solid #3a3a5c;
+      border-radius: 4px;
+      background: #1a1a2e;
+      color: #e0e0e0;
+      font-size: 14px;
+    }
+    input[type="text"]:focus {
+      outline: none;
+      border-color: #f97316;
+    }
+    .color-input-wrapper {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    .color-input-wrapper input[type="color"] {
+      width: 40px;
+      height: 36px;
+      padding: 2px;
+      cursor: pointer;
+    }
+    .color-input-wrapper input[type="text"] {
+      flex: 1;
+    }
+    .hint {
+      font-size: 11px;
+      color: #666;
+      margin-top: 4px;
+    }
+    .project-list {
+      list-style: none;
+    }
+    .project-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 12px;
+      background: #1a1a2e;
+      border-radius: 4px;
+      margin-bottom: 8px;
+      font-size: 13px;
+      font-family: monospace;
+    }
+    .project-item:last-child {
+      margin-bottom: 0;
+    }
+    .project-path {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      flex: 1;
+      margin-right: 12px;
+    }
+    .remove-btn {
+      background: transparent;
+      border: none;
+      color: #e74c3c;
+      cursor: pointer;
+      font-size: 18px;
+      padding: 4px 8px;
+      border-radius: 4px;
+      transition: background 0.2s;
+    }
+    .remove-btn:hover {
+      background: rgba(231, 76, 60, 0.2);
+    }
+    .empty-state {
+      text-align: center;
+      color: #666;
+      padding: 20px;
+      font-size: 13px;
+    }
+    .button-row {
+      display: flex;
+      gap: 8px;
+      margin-top: 20px;
+    }
+    button {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 4px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .primary-btn {
+      background: #f97316;
+      color: white;
+    }
+    .primary-btn:hover {
+      background: #ea580c;
+    }
+    .secondary-btn {
+      background: #3a3a5c;
+      color: #e0e0e0;
+    }
+    .secondary-btn:hover {
+      background: #4a4a6c;
+    }
+    .status {
+      margin-top: 12px;
+      font-size: 12px;
+      color: #4ade80;
+      min-height: 18px;
+    }
+    .status.error {
+      color: #e74c3c;
+    }
+  </style>
+</head>
+<body>
+  <h1>Claudy Configuration</h1>
+
+  <h2>Appearance</h2>
+  <div class="section">
+    <div class="field">
+      <label for="background">Background Color</label>
+      <div class="color-input-wrapper">
+        <input type="color" id="background-picker" value="#1a1a2e">
+        <input type="text" id="background" placeholder="e.g. #1a1a2e or leave empty for transparent">
+      </div>
+      <div class="hint">Leave empty for transparent background</div>
+    </div>
+  </div>
+
+  <h2>Registered Projects</h2>
+  <div class="section">
+    <ul class="project-list" id="project-list">
+      <li class="empty-state">Loading...</li>
+    </ul>
+  </div>
+
+  <div class="button-row">
+    <button class="primary-btn" id="save-btn">Save</button>
+    <button class="secondary-btn" id="close-btn">Close</button>
+  </div>
+
+  <div class="status" id="status"></div>
+
+  <script type="module" src="./config.ts"></script>
+</body>
+</html>
