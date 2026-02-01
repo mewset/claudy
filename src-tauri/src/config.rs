@@ -2,6 +2,40 @@ use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::PathBuf;
 
+// =============================================================================
+// FUTURE WORK: Configuration UI Expansion
+// =============================================================================
+//
+// The Configuration UI (tray menu -> Configuration) currently supports:
+//   - [x] Appearance: background color
+//   - [x] Projects: view/remove registered projects
+//
+// Planned expansions for the Configuration UI:
+//
+// BEHAVIOR SECTION:
+//   - [ ] auto_start: Toggle auto-start on system boot
+//   - [ ] idle_timeout: Slider for idle timeout (seconds before idle state)
+//   - [ ] sleepy_timeout: Slider for sleepy timeout (seconds before sleep state)
+//
+// NOTIFICATIONS SECTION:
+//   - [ ] sound: Toggle sound notifications
+//   - [ ] os_notifications: Toggle OS-level notifications
+//   - [ ] bubble_duration: Slider for speech bubble duration (seconds)
+//
+// APPEARANCE SECTION (additional):
+//   - [ ] size: Dropdown for Claudy size (small/medium/large)
+//   - [ ] theme: Dropdown for theme (auto/light/dark) - requires theme implementation
+//
+// POSITION SECTION:
+//   - [ ] x, y: Drag-to-position or coordinate input
+//   - [ ] anchor: Dropdown for screen anchor (bottom-right, bottom-left, etc.)
+//
+// PROJECTS SECTION (additional):
+//   - [ ] Add project button with folder picker dialog
+//   - [ ] Project path validation
+//
+// =============================================================================
+
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Config {
     #[serde(default)]
