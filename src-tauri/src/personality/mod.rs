@@ -4,11 +4,12 @@
 
 pub mod types;
 pub mod config;
+pub mod analyzer;
 
 pub use types::*;
 pub use config::PersonalityConfig;
+pub use analyzer::Analyzer;
 
 // Submodules to be added in subsequent tasks:
-// pub mod analyzer;  // Task 4: Content analysis
 // pub mod decider;   // Task 5: Comment trigger logic
 // pub mod engine;    // Task 6: Main engine combining everything
