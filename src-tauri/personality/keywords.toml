@@ -1,0 +1,78 @@
+# Claudy Personality Engine - Keyword Detection
+# Supports multiple languages. Claudy listens in all languages, responds in English.
+
+[contexts.debugging]
+keywords = [
+  # English
+  "error", "bug", "fix", "broken", "fail", "stacktrace", "exception", "crash", "issue", "problem",
+  # Swedish
+  "fel", "bugg", "fixa", "trasig", "krasch", "funkar inte", "fungerar inte", "problem"
+]
+
+[contexts.building]
+keywords = [
+  # English
+  "create", "add", "implement", "build", "feature", "new", "make", "write",
+  # Swedish
+  "skapa", "lägg till", "implementera", "bygga", "funktion", "ny", "skriv"
+]
+
+[contexts.testing]
+keywords = [
+  # English
+  "test", "spec", "assert", "coverage", "pass", "fail", "jest", "pytest", "cargo test",
+  # Swedish
+  "test", "täckning", "testerna"
+]
+
+[contexts.learning]
+keywords = [
+  # English
+  "how", "why", "explain", "what is", "understand", "tell me", "help me understand",
+  # Swedish
+  "hur", "varför", "förklara", "vad är", "förstå", "berätta"
+]
+
+[contexts.refactoring]
+keywords = [
+  # English
+  "refactor", "clean", "improve", "rename", "move", "restructure", "simplify",
+  # Swedish
+  "refaktorera", "städa", "förbättra", "döp om", "flytta", "förenkla"
+]
+
+[contexts.deploying]
+keywords = [
+  # English
+  "deploy", "ship", "release", "production", "merge", "push", "publish",
+  # Swedish
+  "deploya", "releasa", "produktion", "mergea", "pusha"
+]
+
+# Sentiment detection patterns
+[sentiment.frustrated]
+keywords = [
+  # English
+  "damn", "shit", "fuck", "why", "stuck", "hate", "annoying", "frustrated",
+  # Swedish
+  "fan", "skit", "varför", "fast", "hatar", "irriterande", "frustrerad"
+]
+patterns = ["???", "?!", "!!!", "WTF", "WHAT"]
+
+[sentiment.confused]
+keywords = [
+  # English
+  "confused", "don't understand", "unclear", "lost", "what",
+  # Swedish
+  "förvirrad", "förstår inte", "oklart", "vilse"
+]
+patterns = ["??", "huh", "va?", "vadå"]
+
+[sentiment.happy]
+keywords = [
+  # English
+  "thanks", "nice", "perfect", "great", "awesome", "works", "excellent", "amazing",
+  # Swedish
+  "tack", "nice", "perfekt", "bra", "grymt", "funkar", "utmärkt", "fantastiskt"
+]
+patterns = ["!", ":)", "👍", "🎉"]

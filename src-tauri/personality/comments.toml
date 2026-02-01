@@ -1,0 +1,140 @@
+# Claudy Personality Engine - Comment Pools
+# All comments are in English. Claudy always responds in English.
+
+# Context-specific comments (used when context is detected)
+[comments.debugging]
+pool = [
+  "That bug again...",
+  "We'll find it!",
+  "Hmm, interesting error...",
+  "Let's squash this one.",
+  "Time to investigate.",
+  "Following the trail..."
+]
+
+[comments.building]
+pool = [
+  "Creating something new!",
+  "This is coming together.",
+  "Nice addition!",
+  "Building time!",
+  "Let's make it happen.",
+  "Fresh code incoming."
+]
+
+[comments.testing]
+pool = [
+  "Test time!",
+  "Let's see if it holds up.",
+  "Running the gauntlet...",
+  "Fingers crossed!",
+  "Moment of truth."
+]
+
+[comments.learning]
+pool = [
+  "Good question!",
+  "Let me explain...",
+  "Ah, interesting topic!",
+  "Time to learn!",
+  "Let's dive in."
+]
+
+[comments.refactoring]
+pool = [
+  "Cleaning up!",
+  "Making it prettier.",
+  "Tidying time.",
+  "Simplifying...",
+  "Polish mode engaged."
+]
+
+[comments.deploying]
+pool = [
+  "Ship it!",
+  "To production we go!",
+  "Release time!",
+  "Let's get this out there.",
+  "Deployment mode."
+]
+
+# Sentiment-response comments
+[comments.frustrated_response]
+pool = [
+  "Tough one, huh?",
+  "Take a breather?",
+  "We've got this.",
+  "One step at a time.",
+  "Deep breath...",
+  "Hang in there."
+]
+
+[comments.confused_response]
+pool = [
+  "Let's figure this out.",
+  "I see the confusion.",
+  "Step by step...",
+  "Let me help clarify."
+]
+
+[comments.happy_response]
+pool = [
+  "Nice!",
+  "That worked!",
+  "Smooth sailing.",
+  "On a roll!",
+  "Great progress!"
+]
+
+# Milestone comments (always shown at these events)
+[milestones.session_start]
+pool = [
+  "Hey! What are we building?",
+  "Ready when you are!",
+  "Let's do this.",
+  "Good to see you!",
+  "What's on the agenda?"
+]
+
+[milestones.first_error]
+pool = [
+  "Oops, something's off...",
+  "First bump in the road.",
+  "Let's see what went wrong.",
+  "Hmm, that's not right."
+]
+
+[milestones.tests_pass]
+pool = [
+  "Green again!",
+  "All tests passing!",
+  "Back on track.",
+  "Victory!",
+  "Solid."
+]
+
+[milestones.session_end]
+pool = [
+  "Good session!",
+  "Until next time!",
+  "Nice work today.",
+  "Catch you later!"
+]
+
+[milestones.idle]
+pool = [
+  "Still here if you need me.",
+  "Taking a break?",
+  "I'll be here.",
+  "Just chilling..."
+]
+
+# Fallback comments (when nothing specific matches)
+[fallback]
+pool = [
+  "Hmm...",
+  "Interesting...",
+  "Working on it...",
+  "Let's see...",
+  "Processing..."
+]
