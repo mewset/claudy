@@ -26,6 +26,7 @@ interface BackendState {
   active_projects: string[];
   focused_project?: string;
   last_event?: BackendEvent;
+  bubble_text?: string;
 }
 
 // Detect if running in Tauri or browser (Tauri 2 uses __TAURI_INTERNALS__)
@@ -244,8 +245,8 @@ contextState.subscribe((ctx) => {
 });
 
 // Handle state update (shared between Tauri and WebSocket)
-function handleStateUpdate(state: ClaudyState, projects?: string[], lastEvent?: BackendEvent) {
-  console.log("[Claudy Frontend] Received state:", state, "event:", lastEvent);
+function handleStateUpdate(state: ClaudyState, projects?: string[], lastEvent?: BackendEvent, bubbleText?: string) {
+  console.log("[Claudy Frontend] Received state:", state, "event:", lastEvent, "bubble:", bubbleText);
 
   // Update CSS animation (direct, for responsiveness)
   claudy.setState(state);
@@ -255,6 +256,11 @@ function handleStateUpdate(state: ClaudyState, projects?: string[], lastEvent?: 
 
   // Toggle matrix effect for working state
   setMatrixActive(state === 'working');
+
+  // Show bubble text if provided (for demos/external control)
+  if (bubbleText) {
+    showBubble(bubbleText);
+  }
 
   // Update projects if provided (WebSocket sends full state)
   if (projects) {
@@ -296,7 +302,8 @@ function connectWebSocket() {
       const state = data.current_state as ClaudyState;
       const projects = data.active_projects;
       const lastEvent = data.last_event;
-      handleStateUpdate(state, projects, lastEvent);
+      const bubbleText = data.bubble_text;
+      handleStateUpdate(state, projects, lastEvent, bubbleText);
     } catch (e) {
       console.error("[Claudy WS] Failed to parse message:", e);
     }

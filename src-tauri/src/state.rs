@@ -8,6 +8,9 @@ pub struct ClaudyState {
     pub active_projects: Vec<String>,
     pub focused_project: Option<String>,
     pub last_event: Option<ClaudeEvent>,
+    /// Optional bubble text for demos/external control
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub bubble_text: Option<String>,
 }
 
 impl ClaudyState {
