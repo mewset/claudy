@@ -24,6 +24,7 @@ impl ClaudyState {
             focused_project: None,
             last_event: None,
             bubble_text: None,
+            suppress_comments: false,
         }
     }
 
