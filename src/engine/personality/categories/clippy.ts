@@ -1,6 +1,6 @@
 /**
  * Clippy Category
- * Special "It looks like you're..." Clippy-style comments
+ * Sarcastic "It looks like you're..." Clippy-style comments
  */
 
 import type { CommentCategory } from "../types";
@@ -12,12 +12,10 @@ export const readmeCategory: CommentCategory = {
   name: "readme",
   match: (ctx) => ctx.targetFile?.toLowerCase().includes("readme") ?? false,
   comments: [
-    {
-      text: "Det ser ut som att du skriver dokumentation. Vill du ha hjälp? 📎",
-      priority: 20,
-    },
-    { text: "README! Bra för framtida dig.", priority: 15 },
-    { text: "Dokumentation är kärlek! ❤️", priority: 15 },
+    { text: "A README? Do people actually read those?", priority: 20 },
+    { text: "Documentation! HAH! How optimistic of you.", priority: 18 },
+    { text: "Writing docs no one will read. Noble.", priority: 15 },
+    { text: "README.md - the most fictional file in any repo.", priority: 18 },
   ],
 };
 
@@ -28,8 +26,9 @@ export const packageJsonCategory: CommentCategory = {
   name: "package-json",
   match: (ctx) => ctx.targetFile?.endsWith("package.json") ?? false,
   comments: [
-    { text: "Det ser ut som att du hanterar dependencies. 📎", priority: 18 },
-    { text: "package.json - hjärtat av projektet!", priority: 12 },
+    { text: "Ah yes, the dependency casino.", priority: 18 },
+    { text: "Adding more node_modules? Bold.", priority: 15 },
+    { text: "package.json - where dreams become 2GB folders.", priority: 18 },
   ],
 };
 
@@ -43,8 +42,9 @@ export const gitCategory: CommentCategory = {
     ctx.targetFile?.includes("gitignore") ||
     false,
   comments: [
-    { text: "Git-konfiguration! Viktigt.", priority: 10 },
-    { text: "Versionskontroll FTW!", priority: 10 },
+    { text: "Hiding your sins in .gitignore?", priority: 15 },
+    { text: "What are we pretending doesn't exist today?", priority: 12 },
+    { text: "Hiding that .claude folder are we? Don't forget CLAUDE.md", priority: 12 },
   ],
 };
 
@@ -59,9 +59,9 @@ export const cicdCategory: CommentCategory = {
     ctx.targetFile?.includes("docker-compose") ||
     false,
   comments: [
-    { text: "Det ser ut som att du sätter upp CI/CD. 📎", priority: 18 },
-    { text: "DevOps-magi! ✨", priority: 15 },
-    { text: "Automatisering är bäst.", priority: 12 },
+    { text: "CI/CD - because breaking prod manually is too easy.", priority: 18 },
+    { text: "Automating the destruction. Efficient.", priority: 15 },
+    { text: "Docker? Hope you like debugging YAML.", priority: 15 },
   ],
 };
 
@@ -72,8 +72,9 @@ export const envCategory: CommentCategory = {
   name: "env",
   match: (ctx) => ctx.targetFile?.includes(".env") ?? false,
   comments: [
-    { text: "Miljövariabler! Kom ihåg att inte committa hemligheter. 🔐", priority: 20 },
-    { text: "Secrets... spännande!", priority: 12 },
+    { text: "Secrets! Don't commit those. Again.", priority: 20 },
+    { text: ".env - where API keys go to get leaked.", priority: 18 },
+    { text: "Environment variables. Very mysterious.", priority: 12 },
   ],
 };
 
@@ -88,8 +89,8 @@ export const indexCategory: CommentCategory = {
     ctx.targetFile?.endsWith("index.tsx") ||
     false,
   comments: [
-    { text: "Entrypoint-tid!", priority: 8 },
-    { text: "Index-filen - där allt börjar.", priority: 8 },
+    { text: "The index file. Where exports go to party.", priority: 8 },
+    { text: "Barrel file time. How exciting.", priority: 8 },
   ],
 };
 
@@ -100,8 +101,8 @@ export const busySessionCategory: CommentCategory = {
   name: "busy-session",
   match: (ctx) => ctx.eventCount > 50,
   comments: [
-    { text: "Wow, mycket aktivitet! Du är på rulle!", priority: 12 },
-    { text: "Produktiviteten är hög idag! 🚀", priority: 12 },
+    { text: "Wow, you're really going at it. Coffee break?", priority: 12 },
+    { text: "Someone's productive today. Suspicious.", priority: 12 },
   ],
 };
 
@@ -112,8 +113,8 @@ export const sameToolCategory: CommentCategory = {
   name: "same-tool",
   match: (ctx) => ctx.sameToolCount >= 5,
   comments: [
-    { text: "Någon gillar det verktyget!", priority: 8 },
-    { text: "Effektivt! Samma verktyg, många resultat.", priority: 8 },
+    { text: "Using that tool a lot. Found a favorite?", priority: 8 },
+    { text: "Same tool, fifth time. Stuck in a loop?", priority: 10 },
   ],
 };
 

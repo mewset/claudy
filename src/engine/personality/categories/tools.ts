@@ -1,6 +1,6 @@
 /**
  * Tools Category
- * Comments based on which tool is being used
+ * Sarcastic comments based on which tool is being used
  */
 
 import type { CommentCategory } from "../types";
@@ -12,9 +12,9 @@ export const styleEditCategory: CommentCategory = {
   name: "style-edit",
   match: (ctx) => ctx.tool === "Edit" && ctx.fileType === "style",
   comments: [
-    { text: "Pillar på stylingen!", priority: 5 },
-    { text: "CSS-magi pågår...", priority: 5 },
-    { text: "Gör det snyggt! ✨", priority: 5 },
+    { text: "CSS. Where 'it works on my machine' hits different.", priority: 8 },
+    { text: "Ah, styling. The 'just one more tweak' abyss.", priority: 8 },
+    { text: "Making it pretty. Or trying to.", priority: 5 },
   ],
 };
 
@@ -25,9 +25,9 @@ export const testEditCategory: CommentCategory = {
   name: "test-edit",
   match: (ctx) => ctx.tool === "Edit" && ctx.fileType === "test",
   comments: [
-    { text: "Tester! Bra tänkt.", priority: 6 },
-    { text: "TDD för vinsten!", priority: 6 },
-    { text: "Kvalitetskontroll pågår...", priority: 5 },
+    { text: "Writing tests! Look at you being responsible.", priority: 8 },
+    { text: "Tests. The code you write to prove your other code works.", priority: 8 },
+    { text: "TDD? Or 'the build is broken so I guess I need tests now'?", priority: 10 },
   ],
 };
 
@@ -39,9 +39,9 @@ export const readingCategory: CommentCategory = {
   match: (ctx) =>
     ctx.tool === "Read" || ctx.tool === "Grep" || ctx.tool === "Glob",
   comments: [
-    { text: "Läser och lär...", priority: 3 },
-    { text: "Vad står det här då?", priority: 3 },
-    { text: "Utforskar koden...", priority: 3 },
+    { text: "Reading code. The eternal treasure hunt.", priority: 3 },
+    { text: "Looking for something? Good luck.", priority: 3 },
+    { text: "Ah yes, 'just quickly check this file'...", priority: 3 },
   ],
 };
 
@@ -52,8 +52,8 @@ export const writeCategory: CommentCategory = {
   name: "write",
   match: (ctx) => ctx.tool === "Write",
   comments: [
-    { text: "Ny fil på gång!", priority: 4 },
-    { text: "Skapar något nytt...", priority: 4 },
+    { text: "Creating a new file. More code to maintain!", priority: 5 },
+    { text: "A fresh file. So much potential. So much future debugging.", priority: 5 },
   ],
 };
 
@@ -64,9 +64,9 @@ export const bashCategory: CommentCategory = {
   name: "bash",
   match: (ctx) => ctx.tool === "Bash",
   comments: [
-    { text: "Kör terminalen...", priority: 3 },
-    { text: "Bash-magi! 🪄", priority: 3 },
-    { text: "Kommandorad-tid!", priority: 3 },
+    { text: "Terminal time. Feeling like a hacker yet?", priority: 4 },
+    { text: "Command line. Where typos have consequences.", priority: 4 },
+    { text: "Running commands. Hopefully not 'rm -rf /'.", priority: 5 },
   ],
 };
 
@@ -77,8 +77,8 @@ export const configEditCategory: CommentCategory = {
   name: "config-edit",
   match: (ctx) => ctx.tool === "Edit" && ctx.fileType === "config",
   comments: [
-    { text: "Konfigurerar...", priority: 4 },
-    { text: "Finjusterar inställningarna.", priority: 4 },
+    { text: "Config files. Where one wrong indent breaks everything.", priority: 6 },
+    { text: "Tweaking settings. What could go wrong?", priority: 5 },
   ],
 };
 
@@ -89,8 +89,8 @@ export const generalEditCategory: CommentCategory = {
   name: "general-edit",
   match: (ctx) => ctx.tool === "Edit",
   comments: [
-    { text: "Editerar...", priority: 2 },
-    { text: "Lite ändringar här och där.", priority: 2 },
+    { text: "Editing. The eternal struggle.", priority: 2 },
+    { text: "Making changes. Bold move.", priority: 2 },
   ],
 };
 

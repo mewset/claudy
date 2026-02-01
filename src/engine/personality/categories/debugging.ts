@@ -1,6 +1,6 @@
 /**
  * Debugging Category
- * Comments for debugging patterns (same file, errors in a row)
+ * Sarcastic comments for debugging patterns
  */
 
 import type { CommentCategory } from "../types";
@@ -12,10 +12,10 @@ export const repeatedFileCategory: CommentCategory = {
   name: "repeated-file",
   match: (ctx) => ctx.sameFileCount >= 3,
   comments: [
-    { text: "Tillbaka till samma fil igen... klassiker!", priority: 10 },
-    { text: "Det ser ut som att du försöker debugga. Vill du ha hjälp? 📎", priority: 15 },
-    { text: "Tredje gången gillt?", priority: 8 },
-    { text: "Den filen får mycket kärlek idag!", priority: 8 },
+    { text: "Back to this file again? It's not gonna fix itself.", priority: 15 },
+    { text: "Third time's the charm. Or fourth. Or fifth.", priority: 12 },
+    { text: "This file is getting a lot of attention. Lucky file.", priority: 10 },
+    { text: "Ah, the old 'edit-save-pray' loop.", priority: 12 },
   ],
 };
 
@@ -26,9 +26,10 @@ export const multipleErrorsCategory: CommentCategory = {
   name: "multiple-errors",
   match: (ctx) => ctx.recentErrors >= 2,
   comments: [
-    { text: "Lite motigt just nu, men du klarar det!", priority: 12 },
-    { text: "Fel händer de bästa. Ta ett djupt andetag! 🧘", priority: 12 },
-    { text: "Debugging är en konstform...", priority: 10 },
+    { text: "Errors happen. Repeatedly, in your case.", priority: 15 },
+    { text: "Have you tried turning it off and on again?",  priority: 12 },
+    { text: "The code is fighting back. Stay strong.", priority: 12 },
+    { text: "Debugging: the fun part, they said.", priority: 10 },
   ],
 };
 
@@ -39,9 +40,9 @@ export const singleErrorCategory: CommentCategory = {
   name: "single-error",
   match: (ctx) => ctx.result === "error",
   comments: [
-    { text: "Oops! Något gick fel...", priority: 5 },
-    { text: "Hmm, det där funkade inte riktigt.", priority: 5 },
-    { text: "Fel! Men inget vi inte kan fixa.", priority: 5 },
+    { text: "Oops. That didn't work.", priority: 5 },
+    { text: "Error! But you knew that already.", priority: 5 },
+    { text: "Well, that was unexpected. Or was it?", priority: 5 },
   ],
 };
 
