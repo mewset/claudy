@@ -20,6 +20,7 @@ impl ClaudyState {
             active_projects: vec![],
             focused_project: None,
             last_event: None,
+            bubble_text: None,
         }
     }
 
