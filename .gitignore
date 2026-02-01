@@ -13,8 +13,5 @@ animations/
 claudy-parts/
 Claudy-*.json
 
-# Documentation (local only)
-docs/
-
 # Unused Lottie animations
 public/animations/
