@@ -2,6 +2,7 @@
 
 # Claudy demo video script
 # Creates a choreographed demo with states and speech bubbles
+# Duration: ~35 seconds
 
 WS_URL="ws://localhost:3695"
 
@@ -10,9 +11,9 @@ send() {
     local bubble="$2"
 
     if [ -n "$bubble" ]; then
-        echo "{\"current_state\": \"$state\", \"active_projects\": [\"demo\"], \"bubble_text\": \"$bubble\"}" | websocat -n1 "$WS_URL" > /dev/null
+        echo "{\"current_state\": \"$state\", \"active_projects\": [\"demo\"], \"bubble_text\": \"$bubble\", \"suppress_comments\": true}" | websocat -n1 "$WS_URL" > /dev/null
     else
-        echo "{\"current_state\": \"$state\", \"active_projects\": [\"demo\"]}" | websocat -n1 "$WS_URL" > /dev/null
+        echo "{\"current_state\": \"$state\", \"active_projects\": [\"demo\"], \"suppress_comments\": true}" | websocat -n1 "$WS_URL" > /dev/null
     fi
     echo "→ $state ${bubble:+\"$bubble\"}"
 }
@@ -22,53 +23,74 @@ echo "Make sure Claudy is running!"
 echo "Starting in 3 seconds..."
 sleep 3
 
-# Intro sequence
+# === INTRO (8 sec) ===
 send "intro"
-sleep 2
+sleep 2.5
 
 send "wake" "Hi, I'm Claudy!"
 sleep 3
 
-send "idle" "I promise not to be like Clippy..."
+send "idle" "Your coding companion."
 sleep 2.5
 
-send "thinking" "...maybe."
-sleep 2
+# === PERSONALITY (8 sec) ===
+send "thinking" "I promise not to be like Clippy..."
+sleep 3
+
+send "happy" "...okay maybe a little."
+sleep 2.5
 
 send "listening" "I react to everything Claude does!"
-sleep 3
+sleep 2.5
 
-send "idle" "Check this out..."
+# === DEMO WORK SEQUENCE (12 sec) ===
+send "idle" "Watch this..."
 sleep 2
 
-# Work sequence
-send "thinking"
+send "listening"
 sleep 1
 
-send "working"
+send "thinking"
 sleep 1.5
 
-send "thinking"
-sleep 0.8
-
 send "working"
-sleep 1.2
+sleep 2
 
 send "thinking"
-sleep 0.5
-
-send "working"
 sleep 1
 
-send "happy" "Phew... that was hard work!"
+send "working"
+sleep 2
+
+send "happy" "Done! That was some serious coding."
 sleep 3
 
-# Outro
-send "idle" "Follow along while you vibe with Claude!"
+# === ERROR HANDLING (5 sec) ===
+send "confused" "Oops... that doesn't look right."
+sleep 2.5
+
+send "thinking"
+sleep 1
+
+send "happy" "Fixed it!"
+sleep 2
+
+# === OUTRO (7 sec) ===
+send "idle" "I live in your system tray."
+sleep 2.5
+
+send "listening" "Vibe with Claude, I'll keep you company!"
 sleep 3
+
+send "sleepy"
+sleep 8
+
+# === GITHUB PLUG ===
+send "wake" "OH, and please give me a star on github.com/mewset/claudy"
+sleep 6
 
 send "sleepy"
 sleep 2
 
 echo ""
-echo "=== Demo complete! ==="
+echo "=== Demo complete! (~50 sec) ==="

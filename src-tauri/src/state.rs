@@ -11,6 +11,9 @@ pub struct ClaudyState {
     /// Optional bubble text for demos/external control
     #[serde(skip_serializing_if = "Option::is_none")]
     pub bubble_text: Option<String>,
+    /// Suppress personality comments (for demos)
+    #[serde(default)]
+    pub suppress_comments: bool,
 }
 
 impl ClaudyState {

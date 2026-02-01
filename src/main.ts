@@ -27,6 +27,7 @@ interface BackendState {
   focused_project?: string;
   last_event?: BackendEvent;
   bubble_text?: string;
+  suppress_comments?: boolean;
 }
 
 // Detect if running in Tauri or browser (Tauri 2 uses __TAURI_INTERNALS__)
@@ -254,8 +255,8 @@ contextState.subscribe((ctx) => {
 });
 
 // Handle state update (shared between Tauri and WebSocket)
-function handleStateUpdate(state: ClaudyState, projects?: string[], lastEvent?: BackendEvent, bubbleText?: string) {
-  console.log("[Claudy Frontend] Received state:", state, "event:", lastEvent, "bubble:", bubbleText);
+function handleStateUpdate(state: ClaudyState, projects?: string[], lastEvent?: BackendEvent, bubbleText?: string, suppressComments?: boolean) {
+  console.log("[Claudy Frontend] Received state:", state, "event:", lastEvent, "bubble:", bubbleText, "suppress:", suppressComments);
 
   // Update CSS animation (direct, for responsiveness)
   claudy.setState(state);
@@ -265,6 +266,14 @@ function handleStateUpdate(state: ClaudyState, projects?: string[], lastEvent?: 
 
   // Toggle matrix effect for working state
   setMatrixActive(state === 'working');
+
+  // Suppress personality comments if requested (for demos)
+  if (suppressComments) {
+    suppressPersonalityComments = true;
+    setTimeout(() => {
+      suppressPersonalityComments = false;
+    }, 5000);
+  }
 
   // Show bubble text if provided (for demos/external control)
   if (bubbleText) {
@@ -317,7 +326,8 @@ function connectWebSocket() {
       const projects = data.active_projects;
       const lastEvent = data.last_event;
       const bubbleText = data.bubble_text;
-      handleStateUpdate(state, projects, lastEvent, bubbleText);
+      const suppressComments = data.suppress_comments;
+      handleStateUpdate(state, projects, lastEvent, bubbleText, suppressComments);
     } catch (e) {
       console.error("[Claudy WS] Failed to parse message:", e);
     }
