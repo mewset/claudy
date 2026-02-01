@@ -1,5 +1,10 @@
 import { ClaudyAnimation, ClaudyState } from "./claudy-css";
+import { ContextState } from "./engine/context";
+import { PersonalityEngine } from "./engine/personality";
+import type { RawClaudeEvent, ClaudeEventType } from "./engine/extraction/types";
 import "./claudy.css";
+// Note: AnimationEngine is available at ./engine/animation for future use
+// with richer JSONL events (file paths, tool names, etc.)
 
 // Detect if running in Tauri or browser (Tauri 2 uses __TAURI_INTERNALS__)
 const isTauri = '__TAURI__' in window || '__TAURI_INTERNALS__' in window;
@@ -37,6 +42,12 @@ app.innerHTML = `
 const animationContainer = app.querySelector("#claudy-animation") as HTMLElement;
 const claudy = new ClaudyAnimation("/claudy-parts");
 claudy.init(animationContainer, true); // true = play intro first
+
+// Initialize engines
+const contextState = new ContextState();
+const personalityEngine = new PersonalityEngine({
+  commentChance: 0.8, // 80% chance to show comment
+});
 
 // Matrix overlay for "working" state
 function generateBinaryString(length: number): string {
@@ -131,55 +142,61 @@ function showBubble(message: string, duration: number = 5000) {
   }, duration);
 }
 
-// State-specific messages (random selection)
-const stateMessages: Partial<Record<ClaudyState, string[]>> = {
-  wake: [
-    "Ready to help!",
-    "What's up?",
-    "Hey there!",
-    "At your service!",
-  ],
-  happy: [
-    "Task complete!",
-    "Done and done!",
-    "Nailed it!",
-    "All finished!",
-  ],
-  confused: [
-    "Hmm, something went wrong...",
-    "That didn't work...",
-    "Oops, let me check that...",
-    "Well, that's odd...",
-  ],
-  listening: [
-    "I'm listening...",
-    "Go on...",
-    "Tell me more...",
-    "Mhm...",
-  ],
-  thinking: [
-    "Let me think...",
-    "Hmm...",
-    "Processing...",
-    "One moment...",
-  ],
-  working: [
-    "Working on it...",
-    "On it!",
-    "Doing the thing...",
-    "Busy busy...",
-  ],
-};
-
-function pickRandom<T>(arr: T[]): T {
-  return arr[Math.floor(Math.random() * arr.length)];
+/**
+ * Map ClaudyState to ClaudeEventType for the context engine
+ */
+function stateToEventType(state: ClaudyState): ClaudeEventType {
+  switch (state) {
+    case "intro":
+      return "session_start";
+    case "listening":
+      return "user_message";
+    case "thinking":
+      return "thinking";
+    case "working":
+      return "tool_use";
+    case "talking":
+      return "talking";
+    case "happy":
+      return "stop";
+    case "confused":
+      return "error";
+    case "wake":
+    case "idle":
+    case "sleepy":
+    default:
+      return "waiting";
+  }
 }
+
+/**
+ * Create a RawClaudeEvent from ClaudyState
+ * This is an adapter for the legacy state-based system
+ */
+function stateToRawEvent(state: ClaudyState): RawClaudeEvent {
+  return {
+    type: stateToEventType(state),
+    timestamp: Date.now(),
+  };
+}
+
+// Subscribe to context updates for personality-based comments
+contextState.subscribe((ctx) => {
+  console.log("[Claudy Engine] Context update:", ctx.event);
+
+  // Get comment from personality engine
+  const comment = personalityEngine.selectComment(ctx);
+  if (comment) {
+    console.log("[Claudy Engine] Showing comment:", comment);
+    showBubble(comment);
+  }
+});
 
 // Handle state update (shared between Tauri and WebSocket)
 function handleStateUpdate(state: ClaudyState, projects?: string[]) {
   console.log("[Claudy Frontend] Received state:", state);
 
-  // Update CSS animation
+  // Update CSS animation (direct, for responsiveness)
   claudy.setState(state);
 
   // Update state label
@@ -192,13 +209,16 @@ function handleStateUpdate(state: ClaudyState, projects?: string[]) {
   if (projects) {
     activeProjects = projects;
     renderProjectSwitcher();
+
+    // Update context state project
+    if (projects.length > 0) {
+      contextState.setProject(projects[focusedIndex] || projects[0]);
+    }
   }
 
-  // Show bubble for certain states (pick random variant)
-  const messages = stateMessages[state];
-  if (messages) {
-    showBubble(pickRandom(messages));
-  }
+  // Feed state to context engine for personality-based comments
+  const rawEvent = stateToRawEvent(state);
+  contextState.handleEvent(rawEvent);
 }
 
 // WebSocket connection for browser mode
