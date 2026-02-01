@@ -75,6 +75,7 @@ export const envCategory: CommentCategory = {
     { text: "Secrets! Don't commit those. Again.", priority: 20 },
     { text: ".env - where API keys go to get leaked.", priority: 18 },
     { text: "Environment variables. Very mysterious.", priority: 12 },
+    { text: "Environments? More like non secure-ments.", priority: 15 },
   ],
 };
 
