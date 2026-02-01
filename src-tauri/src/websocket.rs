@@ -34,8 +34,9 @@ pub async fn start_server(shared_state: SharedState) -> Option<StateBroadcaster>
             match listener.accept().await {
                 Ok((stream, addr)) => {
                     let rx = tx_clone.subscribe();
+                    let tx = tx_clone.clone();
                     let state = shared_state.clone();
-                    tokio::spawn(handle_connection(stream, addr, rx, state));
+                    tokio::spawn(handle_connection(stream, addr, rx, tx, state));
                 }
                 Err(e) => {
                     eprintln!("[Claudy WS] Accept error: {}", e);
@@ -51,6 +52,7 @@ async fn handle_connection(
     stream: TcpStream,
     addr: SocketAddr,
     mut rx: broadcast::Receiver<String>,
+    tx: StateBroadcaster,
     shared_state: SharedState,
 ) {
     eprintln!("[Claudy WS] New connection from {}", addr);
@@ -65,10 +67,12 @@ async fn handle_connection(
 
     let (mut write, mut read) = ws_stream.split();
 
-    // Send current state immediately on connect
+    // Send intro state on connect (so the intro animation plays)
     let initial_json = {
         let state = shared_state.lock().unwrap();
-        serde_json::to_string(&*state).unwrap_or_else(|_| "{}".to_string())
+        let mut intro_state = state.clone();
+        intro_state.current_state = "intro".to_string();
+        serde_json::to_string(&intro_state).unwrap_or_else(|_| "{}".to_string())
     }; // MutexGuard dropped here, before await
 
     if let Err(e) = write.send(Message::Text(initial_json)).await {
@@ -76,14 +80,34 @@ async fn handle_connection(
         return;
     }
 
-    // Spawn a task to handle incoming messages (just for ping/pong, we ignore data)
+    // Spawn a task to handle incoming messages (state updates from clients)
     let addr_clone = addr;
+    let shared_state_clone = shared_state.clone();
     tokio::spawn(async move {
         while let Some(msg) = read.next().await {
             match msg {
+                Ok(Message::Text(text)) => {
+                    // Try to parse as state update
+                    if let Ok(incoming) = serde_json::from_str::<crate::state::ClaudyState>(&text) {
+                        eprintln!("[Claudy WS] Received state from {}: {}", addr_clone, incoming.current_state);
+                        // Update shared state
+                        {
+                            let mut state = shared_state_clone.lock().unwrap();
+                            state.current_state = incoming.current_state;
+                            if !incoming.active_projects.is_empty() {
+                                state.active_projects = incoming.active_projects;
+                            }
+                        }
+                        // Broadcast to all clients
+                        let state = shared_state_clone.lock().unwrap();
+                        if let Ok(json) = serde_json::to_string(&*state) {
+                            let _ = tx.send(json);
+                        }
+                    }
+                }
                 Ok(Message::Close(_)) => break,
                 Err(_) => break,
-                _ => {} // Ignore other messages
+                _ => {}
             }
         }
         eprintln!("[Claudy WS] Read loop ended for {}", addr_clone);
