@@ -1,6 +1,19 @@
 import { ClaudyAnimation, ClaudyState } from "./claudy-css";
 import "./claudy.css";
 
+// Personality engine types
+type Context = 'debugging' | 'building' | 'testing' | 'learning' | 'refactoring' | 'deploying';
+type Mood = 'frustrated' | 'confused' | 'happy' | 'neutral';
+
+interface PersonalityState {
+  current_state: ClaudyState;
+  active_projects: string[];
+  focused_project: string | null;
+  context: Context | null;
+  mood: Mood | null;
+  comment: string | null;
+}
+
 // Detect if running in Tauri or browser (Tauri 2 uses __TAURI_INTERNALS__)
 const isTauri = '__TAURI__' in window || '__TAURI_INTERNALS__' in window;
 console.log("[Claudy] Environment check - isTauri:", isTauri,
@@ -131,7 +144,7 @@ function showBubble(message: string, duration: number = 5000) {
   }, duration);
 }
 
-// State-specific messages (random selection)
+// State-specific messages (random selection) - used as fallback when no personality comment
 const stateMessages: Partial<Record<ClaudyState, string[]>> = {
   wake: [
     "Ready to help!",
@@ -176,8 +189,9 @@ function pickRandom<T>(arr: T[]): T {
 }
 
 // Handle state update (shared between Tauri and WebSocket)
-function handleStateUpdate(state: ClaudyState, projects?: string[]) {
-  console.log("[Claudy Frontend] Received state:", state);
+function handleStateUpdate(data: PersonalityState) {
+  const state = data.current_state;
+  console.log("[Claudy Frontend] Received state:", state, "context:", data.context, "mood:", data.mood);
 
   // Update CSS animation
   claudy.setState(state);
@@ -188,17 +202,26 @@ function handleStateUpdate(state: ClaudyState, projects?: string[]) {
   // Toggle matrix effect for working state
   setMatrixActive(state === 'working');
 
-  // Update projects if provided (WebSocket sends full state)
-  if (projects) {
-    activeProjects = projects;
+  // Update projects
+  if (data.active_projects) {
+    activeProjects = data.active_projects;
     renderProjectSwitcher();
   }
 
-  // Show bubble for certain states (pick random variant)
-  const messages = stateMessages[state];
-  if (messages) {
-    showBubble(pickRandom(messages));
+  // Priority: personality comment > state-specific message
+  if (data.comment) {
+    // Show comment from personality engine
+    showBubble(data.comment);
+  } else {
+    // Fallback to existing state-specific messages
+    const messages = stateMessages[state];
+    if (messages) {
+      showBubble(pickRandom(messages));
+    }
   }
+
+  // Future: Could use data.context and data.mood to adjust visuals
+  // e.g., change colors, animation speed, etc.
 }
 
 // WebSocket connection for browser mode
@@ -219,10 +242,8 @@ function connectWebSocket() {
 
   ws.onmessage = (event) => {
     try {
-      const data = JSON.parse(event.data);
-      const state = data.current_state as ClaudyState;
-      const projects = data.active_projects as string[];
-      handleStateUpdate(state, projects);
+      const data = JSON.parse(event.data) as PersonalityState;
+      handleStateUpdate(data);
     } catch (e) {
       console.error("[Claudy WS] Failed to parse message:", e);
     }
@@ -243,19 +264,8 @@ function connectWebSocket() {
 if (isTauri) {
   // Tauri mode: use IPC events
   import("@tauri-apps/api/event").then(({ listen }) => {
-    listen<string>("claudy-state-change", async (event) => {
-      const state = event.payload as ClaudyState;
-
-      // Fetch projects via invoke
-      import("@tauri-apps/api/core").then(async ({ invoke }) => {
-        try {
-          const projects = await invoke<string[]>("get_active_projects");
-          handleStateUpdate(state, projects);
-        } catch (e) {
-          console.error("Failed to get projects:", e);
-          handleStateUpdate(state);
-        }
-      });
+    listen<PersonalityState>("claudy-state-change", async (event) => {
+      handleStateUpdate(event.payload);
     });
   });
 
