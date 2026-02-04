@@ -1,5 +1,6 @@
 import { invoke } from "@tauri-apps/api/core";
 import { getCurrentWindow } from "@tauri-apps/api/window";
+import { emitTo } from "@tauri-apps/api/event";
 
 interface Config {
   appearance: {
@@ -15,6 +16,7 @@ interface Config {
 // Elements
 const backgroundInput = document.getElementById("background") as HTMLInputElement;
 const backgroundPicker = document.getElementById("background-picker") as HTMLInputElement;
+const themeSelect = document.getElementById("theme") as HTMLSelectElement;
 const projectList = document.getElementById("project-list") as HTMLUListElement;
 const saveBtn = document.getElementById("save-btn") as HTMLButtonElement;
 const closeBtn = document.getElementById("close-btn") as HTMLButtonElement;
@@ -93,6 +95,11 @@ async function loadConfig() {
       backgroundPicker.value = bg;
     }
 
+    // Set theme value
+    if (currentConfig.appearance.theme) {
+      themeSelect.value = currentConfig.appearance.theme;
+    }
+
     // Render projects
     renderProjects(currentConfig.projects.registered);
   } catch (e) {
@@ -103,8 +110,13 @@ async function loadConfig() {
 async function saveConfig() {
   try {
     const background = backgroundInput.value.trim() || null;
-    await invoke("save_appearance_config", { background });
-    showStatus("Configuration saved! Restart Claudy to apply changes.");
+    const theme = themeSelect.value;
+    await invoke("save_appearance_config", { background, theme });
+
+    // Notify main window to apply theme immediately
+    await emitTo("main", "theme-changed", { theme, background });
+
+    showStatus("Configuration saved!");
   } catch (e) {
     showStatus(`Failed to save config: ${e}`, true);
   }

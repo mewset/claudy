@@ -2,6 +2,7 @@ import { ClaudyAnimation, ClaudyState } from "./claudy-css";
 import { ContextState } from "./engine/context";
 import { PersonalityEngine } from "./engine/personality";
 import type { RawClaudeEvent } from "./engine/extraction/types";
+import { applyTheme } from "./themes";
 import "./claudy.css";
 
 /**
@@ -362,6 +363,25 @@ if (isTauri) {
         }
       });
     });
+
+    // Listen for theme changes from config window
+    listen<{ theme: string; background?: string }>("theme-changed", (event) => {
+      console.log("[Claudy] Theme changed:", event.payload);
+      const { theme, background } = event.payload;
+
+      // Apply theme immediately
+      applyTheme(theme);
+
+      // Apply background if provided
+      if (background) {
+        document.body.style.backgroundColor = background;
+      } else {
+        document.body.style.backgroundColor = "transparent";
+      }
+
+      // Play intro animation to show off new theme
+      claudy.setState("intro");
+    });
   });
 
   // Initial project load
@@ -373,16 +393,21 @@ if (isTauri) {
       console.error("Failed to get projects:", e);
     }
 
-    // Apply appearance config (background color)
+    // Apply appearance config (background color and theme)
     try {
-      const appearance = await invoke<{ background?: string }>("get_appearance_config");
+      const appearance = await invoke<{ background?: string; theme?: string }>("get_appearance_config");
       console.log("[Claudy] Appearance config:", appearance);
       if (appearance.background) {
         console.log("[Claudy] Setting background to:", appearance.background);
         document.body.style.backgroundColor = appearance.background;
       }
+      // Apply theme (defaults to 'default' if not set or invalid)
+      const themeId = appearance.theme || 'default';
+      console.log("[Claudy] Applying theme:", themeId);
+      applyTheme(themeId);
     } catch (e) {
       console.error("Failed to get appearance config:", e);
+      applyTheme('default'); // Fallback to default theme
     }
   });
 } else {

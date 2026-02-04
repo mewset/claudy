@@ -27,6 +27,29 @@ body {
 }
 
 /* ===========================================
+   THEME SYSTEM - CSS Custom Properties
+   =========================================== */
+:root {
+  --skin-filter: none;
+  --eye-filter: none;
+}
+
+/* ===========================================
+   THEMED SPRITES via CSS Filter
+   Body, legs, claws use skin filter
+   Eyes use eye filter
+   =========================================== */
+.claudy-body,
+.claudy-legs,
+.claudy-claws {
+  filter: var(--skin-filter);
+}
+
+.claudy-eyes {
+  filter: var(--eye-filter);
+}
+
+/* ===========================================
    PROJECT SWITCHER
    =========================================== */
 .project-switcher {

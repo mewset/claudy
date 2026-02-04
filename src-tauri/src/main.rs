@@ -54,9 +54,12 @@ fn get_full_config() -> config::Config {
 }
 
 #[tauri::command]
-fn save_appearance_config(background: Option<String>) -> Result<(), String> {
+fn save_appearance_config(background: Option<String>, theme: Option<String>) -> Result<(), String> {
     let mut cfg = config::load_config();
     cfg.appearance.background = background;
+    if let Some(t) = theme {
+        cfg.appearance.theme = t;
+    }
     config::save_config(&cfg).map_err(|e| e.to_string())
 }
 
