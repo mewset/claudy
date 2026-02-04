@@ -76,6 +76,7 @@ You can also access settings via the system tray icon → **Configuration**.
 ```toml
 [appearance]
 background = "#1a1a2e"  # or leave empty for transparent
+theme = "default"       # default, orc, or winter
 
 [projects]
 registered = [
@@ -84,8 +85,17 @@ registered = [
 ]
 ```
 
+**Available themes:**
+- `default` - Original Claudy colors
+- `orc` - Green skin with red eyes
+- `winter` - Light blue (Claude Code winter style)
+
+Theme changes apply instantly without restart.
+
 ---
 
 ## License
 
 MIT
+
+
