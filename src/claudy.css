@@ -30,70 +30,23 @@ body {
    THEME SYSTEM - CSS Custom Properties
    =========================================== */
 :root {
-  --skin-color: #DA7B5C;
-  --eye-color: #000000;
+  --skin-filter: none;
+  --eye-filter: none;
 }
 
 /* ===========================================
-   THEMED SPRITE MASKS
-   Body, legs, claws use skin-color
-   Eyes use eye-color
+   THEMED SPRITES via CSS Filter
+   Body, legs, claws use skin filter
+   Eyes use eye filter
    =========================================== */
 .claudy-body,
 .claudy-legs,
 .claudy-claws {
-  /* Hide the original colored image */
-  opacity: 0;
+  filter: var(--skin-filter);
 }
 
-.claudy-body::after,
-.claudy-legs::after,
-.claudy-claws::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background-color: var(--skin-color);
-  -webkit-mask-size: contain;
-  mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-  mask-position: center;
-}
-
-.claudy-body::after {
-  -webkit-mask-image: url('/claudy-parts/body.png');
-  mask-image: url('/claudy-parts/body.png');
-}
-
-.claudy-legs::after {
-  -webkit-mask-image: url('/claudy-parts/legs.png');
-  mask-image: url('/claudy-parts/legs.png');
-}
-
-.claudy-claws::after {
-  -webkit-mask-image: url('/claudy-parts/claws.png');
-  mask-image: url('/claudy-parts/claws.png');
-}
-
-/* Eyes use separate eye-color */
 .claudy-eyes {
-  opacity: 0;
-}
-
-.claudy-eyes::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background-color: var(--eye-color);
-  -webkit-mask-image: url('/claudy-parts/eyes.png');
-  mask-image: url('/claudy-parts/eyes.png');
-  -webkit-mask-size: contain;
-  mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-  mask-position: center;
+  filter: var(--eye-filter);
 }
 
 /* ===========================================
