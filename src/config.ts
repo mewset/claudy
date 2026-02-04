@@ -1,5 +1,6 @@
 import { invoke } from "@tauri-apps/api/core";
 import { getCurrentWindow } from "@tauri-apps/api/window";
+import { emitTo } from "@tauri-apps/api/event";
 
 interface Config {
   appearance: {
@@ -111,7 +112,11 @@ async function saveConfig() {
     const background = backgroundInput.value.trim() || null;
     const theme = themeSelect.value;
     await invoke("save_appearance_config", { background, theme });
-    showStatus("Configuration saved! Restart Claudy to apply changes.");
+
+    // Notify main window to apply theme immediately
+    await emitTo("main", "theme-changed", { theme, background });
+
+    showStatus("Configuration saved!");
   } catch (e) {
     showStatus(`Failed to save config: ${e}`, true);
   }

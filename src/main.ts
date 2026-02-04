@@ -363,6 +363,25 @@ if (isTauri) {
         }
       });
     });
+
+    // Listen for theme changes from config window
+    listen<{ theme: string; background?: string }>("theme-changed", (event) => {
+      console.log("[Claudy] Theme changed:", event.payload);
+      const { theme, background } = event.payload;
+
+      // Apply theme immediately
+      applyTheme(theme);
+
+      // Apply background if provided
+      if (background) {
+        document.body.style.backgroundColor = background;
+      } else {
+        document.body.style.backgroundColor = "transparent";
+      }
+
+      // Play intro animation to show off new theme
+      claudy.setState("intro");
+    });
   });
 
   // Initial project load
