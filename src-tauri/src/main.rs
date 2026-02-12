@@ -71,8 +71,6 @@ fn remove_project(path: String) -> Result<(), String> {
 }
 
 fn main() {
-    let cfg = config::load_config();
-
     let shared_state: SharedState = Arc::new(Mutex::new(ClaudyState::new()));
     let state_for_watcher = shared_state.clone();
     let state_for_ws = shared_state.clone();
@@ -160,7 +158,6 @@ fn main() {
             }
 
             // Start watcher for registered projects
-            let cfg = config::load_config();
             let state_clone = state_for_watcher.clone();
             let app_handle = app.handle().clone();
             let ws_broadcaster_for_watcher = ws_broadcaster.clone();
@@ -187,19 +184,14 @@ fn main() {
                 });
 
                 match watcher_result {
-                    Ok(mut watcher) => {
-                        for project_path in &cfg.projects.registered {
-                            let path = std::path::Path::new(project_path);
-                            if let Err(e) = watcher.watch_project(path) {
-                                eprintln!("Failed to watch {}: {}", project_path, e);
-                            }
+                    Ok(mut watcher) => loop {
+                        let cfg = config::load_config();
+                        if let Err(e) = watcher.sync_projects(&cfg.projects.registered) {
+                            eprintln!("Failed to sync watched projects: {}", e);
                         }
 
-                        // Keep thread alive
-                        loop {
-                            std::thread::sleep(std::time::Duration::from_secs(60));
-                        }
-                    }
+                        std::thread::sleep(std::time::Duration::from_secs(2));
+                    },
                     Err(e) => {
                         eprintln!("Failed to create watcher: {}", e);
                     }
