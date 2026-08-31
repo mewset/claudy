@@ -9,9 +9,17 @@ dist/
 src-tauri/target/
 
 # Design assets (not for repo)
-animations/
-claudy-parts/
+/animations/
+/claudy-parts/
 Claudy-*.json
 
-# Unused Lottie animations
-public/animations/
+# Demo recordings (keep local only; demo.gif is tracked for the README)
+*.mp4
+*.mkv
+claudy-demo-introframe.png
+claudy-frame.png
+demo-states.sh
+
+# Local-only work notes and tooling
+.serena/
+docs/
